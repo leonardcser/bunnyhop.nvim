@@ -3,8 +3,7 @@ rockspec_format = '3.0'
 package = "nvim-lua-plugin"
 version = "scm-1"
 source = {
-  -- TODO: Update this URL
-  url = "git+https://github.com/nvim-lua/nvim-lua-plugin-template"
+  url = "git+https://github.com/PLAZMAMA/bunnyhop.nvim/"
 }
 dependencies = {
   -- Add runtime dependencies here
