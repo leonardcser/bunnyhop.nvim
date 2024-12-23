@@ -57,6 +57,7 @@ local function _get_copilot_api_key(env_var_name)
     return nil
 end
 
+-- TODO: Debug M.config being nil
 function M._create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
@@ -90,7 +91,7 @@ function M._create_prompt()
     if M.config.api_key:match("[a-z]+") ~= nil then
         vim.notify(
             "Given Copilot API key is not a name of an enviornment variable",
-            vim.log.levels.DEBUG
+            vim.log.levels.ERROR
         )
     end
     local api_key = _get_copilot_api_key(M.config.api_key)
@@ -102,6 +103,10 @@ end
 ---Setup function
 ---@param opts? bhop.opts
 function M.setup(opts)
-    M.config = opts
+    if opts == nil then
+        M.config = M.defaults
+    else
+        M.config = opts
+    end
 end
 return M
