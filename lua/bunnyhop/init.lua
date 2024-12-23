@@ -1,4 +1,4 @@
--- Init of plugin
+local curl = require("plenary.curl")
 
 local M = {}
 
@@ -10,82 +10,52 @@ M.defaults = {
     api_key = "",
 }
 
----@type string
-M._config_path = nil
-
----Sets the Copilot OAuth token(API Key).
+---Gets the Copilot OAuth token(API Key).
 ---The function first attempts to load the token from the GITHUB_TOKEN environment variable.
 ---If not found, it then attempts to load the token from configuration files located in the user's configuration path.
----@return nil
-function M._set_copilot_api_key()
-    if M.config.api_key then
-        return
+---@param env_var_name? string
+---@return nil|string
+local function _get_copilot_api_key(env_var_name)
+    if env_var_name == nil then
+        env_var_name = "GITHUB_TOKEN"
     end
-
-    local token = os.getenv("GITHUB_TOKEN")
-    if token then
-        M.config.api_key = token
-        return
+    local api_key = os.getenv(env_var_name)
+    if api_key then
+        return api_key
     end
 
     -- Find config path.
-    if M._config_path == nil then
-        if
-            vim.fn.has("win32") > 0
-            and vim.fn.isdirectory(vim.fn.expand("~/AppData/Local")) > 0
-        then
-            M._config_path = vim.fn.expand("~/AppData/Local")
-        elseif vim.fn.isdirectory(vim.fn.expand("$XDG_CONFIG_HOME")) > 0 then
-            M._config_path = vim.fn.expand("$XDG_CONFIG_HOME")
-        else
-            vim.notify("Unable to find Config path", vim.log.levels.ERROR)
-            return
-        end
+    local _config_path = nil
+    if
+        vim.fn.has("win32") > 0
+        and vim.fn.isdirectory(vim.fn.expand("~/AppData/Local")) > 0
+    then
+        _config_path = vim.fn.expand("~/AppData/Local")
+    elseif vim.fn.isdirectory(vim.fn.expand("$XDG_CONFIG_HOME")) > 0 then
+        _config_path = vim.fn.expand("$XDG_CONFIG_HOME")
+    else
+        vim.notify("Unable to find Config path", vim.log.levels.ERROR)
+        return
     end
 
     local file_paths = {
-        M._config_path .. "/github-copilot/hosts.json",
-        M._config_path .. "/github-copilot/apps.json",
+        _config_path .. "/github-copilot/hosts.json",
+        _config_path .. "/github-copilot/apps.json",
     }
 
     for _, file_path in ipairs(file_paths) do
         if vim.fn.filereadable(file_path) == 1 then
             local userdata = vim.fn.json_decode(vim.fn.readfile(file_path))
             for key, value in pairs(userdata) do
+                -- TODO: refactor to key:find(...)
                 if string.find(key, "github.com") then
-                    M.config.api_key =  value.oauth_token
+                    return value.oauth_token
                 end
             end
         end
     end
 
     return nil
-end
-
----Authorize the GitHub OAuth token
----@return table|nil
-local function authorize_token()
-    if _github_token and _github_token.expires_at > os.time() then
-        log:debug("Reusing GitHub Copilot token")
-        return _github_token
-    end
-
-    log:debug("Authorizing GitHub Copilot token")
-
-    local request = curl.get("https://api.github.com/copilot_internal/v2/token", {
-        headers = {
-            Authorization = "Bearer " .. _oauth_token,
-            ["Accept"] = "application/json",
-        },
-        insecure = config.adapters.opts.allow_insecure,
-        proxy = config.adapters.opts.proxy,
-        on_error = function(err)
-            log:error("Copilot Adapter: Token request error %s", err)
-        end,
-    })
-
-    _github_token = vim.fn.json_decode(request.body)
-    return _github_token
 end
 
 function M._create_prompt()
@@ -117,8 +87,14 @@ function M._create_prompt()
         .. csv_jumplist
     print(prompt)
 
-    -- authenticate copilot and
-    authorize_token()
+    -- Get copilot api token
+    if M.config.api_key:match("[a-z]+") ~= nil then
+        vim.notify(
+            "Given Copilot API key is not a name of an enviornment variable",
+            vim.log.levels.DEBUG
+        )
+    end
+    local api_key = _get_copilot_api_key(M.config.api_key)
 
     -- TODO: add the change list for each file in the jump list.
     -- local changelist = vim.api.getchangelist()
