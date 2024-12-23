@@ -47,8 +47,7 @@ local function _get_copilot_api_key(env_var_name)
         if vim.fn.filereadable(file_path) == 1 then
             local userdata = vim.fn.json_decode(vim.fn.readfile(file_path))
             for key, value in pairs(userdata) do
-                -- TODO: refactor to key:find(...)
-                if string.find(key, "github.com") then
+                if key:find("github.com") then
                     return value.oauth_token
                 end
             end
