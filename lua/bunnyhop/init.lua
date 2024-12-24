@@ -174,5 +174,28 @@ function M.setup(opts)
     else
         M.config = opts
     end
+
+    if #M.config.api_key == 0 then
+        vim.notify(
+            "API key wasn't given, please set the api_key in the opts table to an enviornment variable name.",
+            vim.log.levels.ERROR
+        )
+    elseif M.config.api_key:match("[a-z]+") ~= nil then
+        vim.notify(
+            "Given API key is not a name of an enviornment variable.",
+            vim.log.levels.ERROR
+        )
+    else
+        local api_key = os.getenv(M.config.api_key)
+        if api_key then
+            M.config.api_key = api_key
+        else
+            vim.notify(
+                "Wasn't able to get API key from the enviornment.",
+                vim.log.levels.ERROR
+            )
+        end
+    end
 end
+
 return M
