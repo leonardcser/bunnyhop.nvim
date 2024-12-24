@@ -91,6 +91,19 @@ local function _get_copilot_response(prompt, api_key)
     }
 end
 
+
+-- TODO: use this for later copilot integration
+-- -- Get copilot api token
+-- local api_key = _get_copilot_api_key(M.config.api_key)
+-- if #api_key == 0 then
+--     vim.notify("Wasn't Able to get Copilot's OAuth/API key.", vim.log.levels.ERROR)
+--     return
+-- end
+--
+-- _get_copilot_response(prompt, api_key)
+
+
+
 -- TODO: Debug M.config being nil
 function M.create_prompt()
     -- Dict keys to column name convertor
@@ -120,15 +133,6 @@ function M.create_prompt()
         .. "# History of Cursor Jumps\n"
         .. csv_jumplist
     -- print(prompt) -- TODO: switch to "return prompt" and remove everything below.
-
-    -- -- Get copilot api token
-    -- local api_key = _get_copilot_api_key(M.config.api_key)
-    -- if #api_key == 0 then
-    --     vim.notify("Wasn't Able to get Copilot's OAuth/API key.", vim.log.levels.ERROR)
-    --     return
-    -- end
-    --
-    -- _get_copilot_response(prompt, api_key)
 
     -- TODO: add the change list for each file in the jump list.
     -- local changelist = vim.api.getchangelist()
