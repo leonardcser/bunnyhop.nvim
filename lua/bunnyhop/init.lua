@@ -132,6 +132,40 @@ local function _create_prompt()
     return prompt
 end
 
+function M.predict()
+    local hf_url =
+        "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct/v1/chat/completions"
+    local prompt = _create_prompt()
+    local request_body = vim.json.encode {
+        ["model"] = "Qwen/Qwen2.5-Coder-32B-Instruct",
+        ["messages"] = { { ["role"] = "user", ["content"] = prompt } },
+        ["max_tokens"] = 30,
+        ["stream"] = false,
+    }
+    -- TODO: Figure out why vim.system{...} doesn't work. (curl says it can't the url has nested braces)
+    local response = vim.json.decode(
+        vim.fn.system(
+            "curl"
+                .. " -s"
+                .. ' "'
+                .. hf_url
+                .. '"'
+                .. " -X POST"
+                .. ' -H "Authorization: Bearer '
+                .. M.config.api_key
+                .. '"'
+                .. ' -H "Content-Type: application/json"'
+                .. " -d '"
+                .. request_body
+                .. "'"
+        )
+    )
+    local prediction = vim.json.decode(response.choices[1].message.content)
+
+    vim.cmd("edit " .. prediction[3])
+    vim.api.nvim_win_set_cursor(0, { prediction[1], prediction[2] - 1 })
+end
+
 ---Setup function
 ---@param opts? bhop.opts
 function M.setup(opts)
