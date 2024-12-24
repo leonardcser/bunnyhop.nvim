@@ -91,7 +91,6 @@ local function _get_copilot_response(prompt, api_key)
     }
 end
 
-
 -- TODO: use this for later copilot integration
 -- -- Get copilot api token
 -- local api_key = _get_copilot_api_key(M.config.api_key)
@@ -102,7 +101,6 @@ end
 --
 -- _get_copilot_response(prompt, api_key)
 
--- TODO: Debug M.config being nil
 function M.create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
