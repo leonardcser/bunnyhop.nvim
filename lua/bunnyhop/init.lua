@@ -68,7 +68,7 @@ end
 local function _get_copilot_response(prompt, api_key)
     print("HERE")
     local copilot_url = "https://api.githubcopilot.com/chat/completions"
-    local request_body = vim.json.encode { ["messages"] = {prompt}, ["stream"] = false }
+    local request_body = vim.json.encode { ["messages"] = { prompt }, ["stream"] = false }
 
     -- TODO: Figure out how to send chat request to copilot
     -- ['vscode-sessionid'] = self.sessionid,
