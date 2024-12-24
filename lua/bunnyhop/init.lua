@@ -41,6 +41,7 @@ local function _create_prompt()
     return prompt
 end
 
+-- TODO: Make "predict()" an Autocommand on "normal mode enter" event
 function M.predict()
     local hf_url =
         "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct/v1/chat/completions"
