@@ -132,10 +132,10 @@ function M.create_prompt()
         .. "DO NOT HALLUCINATE!\n"
         .. "# History of Cursor Jumps\n"
         .. csv_jumplist
-    -- print(prompt) -- TODO: switch to "return prompt" and remove everything below.
 
     -- TODO: add the change list for each file in the jump list.
     -- local changelist = vim.api.getchangelist()
+    return prompt
 end
 
 ---Setup function
