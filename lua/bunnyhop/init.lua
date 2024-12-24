@@ -41,8 +41,7 @@ local function _create_prompt()
     return prompt
 end
 
--- TODO: Make "predict()" an Autocommand on "normal mode enter" event
-function M.predict()
+local function predict()
     local hf_url =
         "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct/v1/chat/completions"
     local prompt = _create_prompt()
@@ -74,9 +73,17 @@ function M.predict()
         M.cursor_pred.file = prediction[3]
     end)
 end
+vim.api.nvim_create_autocmd(
+    { "ModeChanged" },
+    {
+        group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
+        pattern = "*:n",
+        callback = predict,
+    }
+)
 
 -- TODO: Move jump logic to here and make predict into an Autocommand that activate everytime the person enters normal mode.
-function M.jump()
+function M.hop()
     vim.cmd("edit " .. M.cursor_pred.file)
     vim.api.nvim_win_set_cursor(0, { M.cursor_pred.line, M.cursor_pred.column - 1 })
 end
