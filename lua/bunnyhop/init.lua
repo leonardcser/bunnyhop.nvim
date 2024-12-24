@@ -71,6 +71,10 @@ local function _get_copilot_response(prompt, api_key)
     print("HERE")
     local copilot_url = "https://api.githubcopilot.com/chat/completions"
     local request_body = vim.json.encode { ["messages"] = {prompt}, ["stream"] = false }
+
+    -- TODO: Figure out how to send chat request to copilot
+    -- ['vscode-sessionid'] = self.sessionid,
+    -- ['vscode-machineid'] = self.machineid,
     local response = vim.system {
         "curl",
         " -X POST ",
@@ -84,8 +88,6 @@ local function _get_copilot_response(prompt, api_key)
             .. "."
             .. vim.version().patch
             .. '"',
-    ['vscode-sessionid'] = self.sessionid,
-    ['vscode-machineid'] = self.machineid,
         '-d "' .. request_body .. '" ',
         copilot_url,
     }
@@ -101,8 +103,6 @@ end
 -- end
 --
 -- _get_copilot_response(prompt, api_key)
-
-
 
 -- TODO: Debug M.config being nil
 function M.create_prompt()
