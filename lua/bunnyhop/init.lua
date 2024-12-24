@@ -50,33 +50,27 @@ function M.predict()
         ["max_tokens"] = 30,
         ["stream"] = false,
     }
-    -- TODO: Figure out why vim.system{...} doesn't work. (curl says it can't the url has nested braces)
-    local response = vim.json.decode(
-        vim.fn.system(
-            "curl"
-                .. " -s"
-                .. ' "'
-                .. hf_url
-                .. '"'
-                .. " -X POST"
-                .. ' -H "Authorization: Bearer '
-                .. M.config.api_key
-                .. '"'
-                .. ' -H "Content-Type: application/json"'
-                .. " -d '"
-                .. request_body
-                .. "'"
-        )
-    )
-    local prediction = vim.json.decode(response.choices[1].message.content)
+    local response = vim.system {
+        "curl",
+        -- "-s",
+        "-H", "Authorization: Bearer " .. M.config.api_key,
+        "-H", "Content-Type: application/json",
+        "-d", request_body,
+        hf_url,
+    }:wait()
+    if response.code ~= 0 then
+        vim.notify(response.stderr, vim.log.levels.ERROR)
+        return
+    end
 
+    local json_response = vim.json.decode(response.stdout)
+    local prediction = vim.json.decode(json_response.choices[1].message.content)
     vim.cmd("edit " .. prediction[3])
     vim.api.nvim_win_set_cursor(0, { prediction[1], prediction[2] - 1 })
 end
 
 -- TODO: Move jump logic to here and make predict into an Autocommand that activate everytime the person enters normal mode.
-function M.jump()
-end
+function M.jump() end
 
 ---Setup function
 ---@param opts? bhop.opts
