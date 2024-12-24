@@ -82,7 +82,6 @@ vim.api.nvim_create_autocmd(
     }
 )
 
--- TODO: Move jump logic to here and make predict into an Autocommand that activate everytime the person enters normal mode.
 function M.hop()
     vim.cmd("edit " .. M.cursor_pred.file)
     vim.api.nvim_win_set_cursor(0, { M.cursor_pred.line, M.cursor_pred.column - 1 })
