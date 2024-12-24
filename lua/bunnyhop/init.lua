@@ -10,18 +10,28 @@ M.defaults = {
     api_key = "",
 }
 
+-- TODO: Return to providing a copilot provider later (its wayyy to complex and undocumented for test)
 ---Gets the Copilot OAuth token(API Key).
 ---The function first attempts to load the token from the GITHUB_TOKEN environment variable.
 ---If not found, it then attempts to load the token from configuration files located in the user's configuration path.
+---Returns an empty string if it failed to get copilot's api key(OAuth token).
 ---@param env_var_name? string
----@return nil|string
+---@return string
 local function _get_copilot_api_key(env_var_name)
     if env_var_name == nil then
         env_var_name = "GITHUB_TOKEN"
     end
-    local api_key = os.getenv(env_var_name)
-    if api_key then
-        return api_key
+
+    if M.config.api_key:match("[a-z]+") ~= nil then
+        vim.notify(
+            "Given Copilot API key is not a name of an enviornment variable",
+            vim.log.levels.WARN
+        )
+    else
+        local api_key = os.getenv(env_var_name)
+        if api_key then
+            return api_key
+        end
     end
 
     -- Find config path.
@@ -35,7 +45,7 @@ local function _get_copilot_api_key(env_var_name)
         _config_path = vim.fn.expand("$XDG_CONFIG_HOME")
     else
         vim.notify("Unable to find Config path", vim.log.levels.ERROR)
-        return
+        return ""
     end
 
     local file_paths = {
@@ -54,7 +64,31 @@ local function _get_copilot_api_key(env_var_name)
         end
     end
 
-    return nil
+    return ""
+end
+
+local function _get_copilot_response(prompt, api_key)
+    print("HERE")
+    local copilot_url = "https://api.githubcopilot.com/chat/completions"
+    local request_body = vim.json.encode { ["messages"] = {prompt}, ["stream"] = false }
+    local response = vim.system {
+        "curl",
+        " -X POST ",
+        '-H "authorization: Bearer ' .. api_key .. '"',
+        '-H "content-type: application/json"',
+        '-H "copilot-integration-id: vscode-chat"',
+        '-H "editor-version: Neovim/'
+            .. vim.version().major
+            .. "."
+            .. vim.version().minor
+            .. "."
+            .. vim.version().patch
+            .. '"',
+    ['vscode-sessionid'] = self.sessionid,
+    ['vscode-machineid'] = self.machineid,
+        '-d "' .. request_body .. '" ',
+        copilot_url,
+    }
 end
 
 -- TODO: Debug M.config being nil
@@ -85,16 +119,16 @@ function M._create_prompt()
         .. "DO NOT HALLUCINATE!\n"
         .. "# History of Cursor Jumps\n"
         .. csv_jumplist
-    print(prompt)
+    -- print(prompt) -- TODO: switch to "return prompt" and remove everything below.
 
-    -- Get copilot api token
-    if M.config.api_key:match("[a-z]+") ~= nil then
-        vim.notify(
-            "Given Copilot API key is not a name of an enviornment variable",
-            vim.log.levels.ERROR
-        )
-    end
-    local api_key = _get_copilot_api_key(M.config.api_key)
+    -- -- Get copilot api token
+    -- local api_key = _get_copilot_api_key(M.config.api_key)
+    -- if #api_key == 0 then
+    --     vim.notify("Wasn't Able to get Copilot's OAuth/API key.", vim.log.levels.ERROR)
+    --     return
+    -- end
+    --
+    -- _get_copilot_response(prompt, api_key)
 
     -- TODO: add the change list for each file in the jump list.
     -- local changelist = vim.api.getchangelist()
