@@ -99,6 +99,7 @@ end
 --
 -- _get_copilot_response(prompt, api_key)
 
+-- TODO: Remove all the ".git/..." jumps from the jumplist
 local function _create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
@@ -164,6 +165,10 @@ function M.predict()
 
     vim.cmd("edit " .. prediction[3])
     vim.api.nvim_win_set_cursor(0, { prediction[1], prediction[2] - 1 })
+end
+
+-- TODO: Move jump logic to here and make predict into an Autocommand that activate everytime the person enters normal mode.
+function M.jump()
 end
 
 ---Setup function
