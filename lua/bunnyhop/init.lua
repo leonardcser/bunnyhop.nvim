@@ -5,6 +5,7 @@ M.defaults = {
     ---@type string
     api_key = "",
 }
+M.cursor_pred = {line = -1, column = -1, file = ""}
 
 -- TODO: Remove all the ".git/..." jumps from the jumplist
 local function _create_prompt()
@@ -52,7 +53,6 @@ function M.predict()
     }
     local response = vim.system {
         "curl",
-        -- "-s",
         "-H", "Authorization: Bearer " .. M.config.api_key,
         "-H", "Content-Type: application/json",
         "-d", request_body,
@@ -65,12 +65,16 @@ function M.predict()
 
     local json_response = vim.json.decode(response.stdout)
     local prediction = vim.json.decode(json_response.choices[1].message.content)
-    vim.cmd("edit " .. prediction[3])
-    vim.api.nvim_win_set_cursor(0, { prediction[1], prediction[2] - 1 })
+    M.cursor_pred.line = prediction[1]
+    M.cursor_pred.column = prediction[2]
+    M.cursor_pred.file = prediction[3]
 end
 
 -- TODO: Move jump logic to here and make predict into an Autocommand that activate everytime the person enters normal mode.
-function M.jump() end
+function M.jump()
+    vim.cmd("edit " .. M.cursor_pred.file)
+    vim.api.nvim_win_set_cursor(0, { M.cursor_pred.line, M.cursor_pred.column - 1 })
+end
 
 ---Setup function
 ---@param opts? bhop.opts
