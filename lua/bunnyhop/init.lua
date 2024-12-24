@@ -2,8 +2,6 @@ local M = {}
 
 ---@class bhop.opts
 M.defaults = {
-    ---@type "copilot"
-    provier = "copilot",
     ---@type string
     api_key = "",
 }
