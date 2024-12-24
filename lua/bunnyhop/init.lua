@@ -5,7 +5,7 @@ M.defaults = {
     ---@type string
     api_key = "",
 }
-M.cursor_pred = {line = -1, column = -1, file = ""}
+M.cursor_pred = { line = -1, column = -1, file = "" }
 
 -- TODO: Remove all the ".git/..." jumps from the jumplist
 local function _create_prompt()
@@ -51,23 +51,27 @@ function M.predict()
         ["max_tokens"] = 30,
         ["stream"] = false,
     }
-    local response = vim.system {
+    vim.system({
         "curl",
-        "-H", "Authorization: Bearer " .. M.config.api_key,
-        "-H", "Content-Type: application/json",
-        "-d", request_body,
+        "-H",
+        "Authorization: Bearer " .. M.config.api_key,
+        "-H",
+        "Content-Type: application/json",
+        "-d",
+        request_body,
         hf_url,
-    }:wait()
-    if response.code ~= 0 then
-        vim.notify(response.stderr, vim.log.levels.ERROR)
-        return
-    end
+    }, {}, function(command_result)
+        if command_result.code ~= 0 then
+            vim.notify(command_result.stderr, vim.log.levels.ERROR)
+            return
+        end
 
-    local json_response = vim.json.decode(response.stdout)
-    local prediction = vim.json.decode(json_response.choices[1].message.content)
-    M.cursor_pred.line = prediction[1]
-    M.cursor_pred.column = prediction[2]
-    M.cursor_pred.file = prediction[3]
+        local response = vim.json.decode(command_result.stdout)
+        local prediction = vim.json.decode(response.choices[1].message.content)
+        M.cursor_pred.line = prediction[1]
+        M.cursor_pred.column = prediction[2]
+        M.cursor_pred.file = prediction[3]
+    end)
 end
 
 -- TODO: Move jump logic to here and make predict into an Autocommand that activate everytime the person enters normal mode.
