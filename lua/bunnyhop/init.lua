@@ -101,7 +101,7 @@ end
 --
 -- _get_copilot_response(prompt, api_key)
 
-function M.create_prompt()
+local function create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
     -- lnum -> line_num
