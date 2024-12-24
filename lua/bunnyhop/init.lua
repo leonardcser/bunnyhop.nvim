@@ -1,5 +1,3 @@
-local curl = require("plenary.curl")
-
 local M = {}
 
 ---@class bhop.opts
