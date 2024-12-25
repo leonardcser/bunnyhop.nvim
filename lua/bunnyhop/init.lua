@@ -79,9 +79,31 @@ vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     callback = predict,
 })
 
+---Clips the number to the given range
+---@param num number Number to clip
+---@param min number Inclusive minimum
+---@param max number Inclusive maximum
+---@return number
+local function clip_number(num, min, max)
+    if num < min then
+        return min
+    elseif num > max then
+        return max
+    end
+    return num
+end
+
+---Hops to the predicted cursor position.
 function M.hop()
     vim.cmd("edit " .. M.cursor_pred.file)
-    vim.api.nvim_win_set_cursor(0, { M.cursor_pred.line, M.cursor_pred.column - 1 })
+    -- Clipping model prediction because it predicts out of range values often.
+    local line_pred = clip_number(M.cursor_pred.line, 1, vim.api.nvim_buf_line_count(0))
+    local column_pred = clip_number(
+        M.cursor_pred.column,
+        1,
+        #vim.api.nvim_buf_get_lines(0, line_pred - 1, line_pred, true)[1]
+    )
+    vim.api.nvim_win_set_cursor(0, { line_pred, column_pred - 1 })
 end
 
 ---Setup function
