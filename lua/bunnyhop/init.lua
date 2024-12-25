@@ -99,6 +99,15 @@ local function predict()
             M.cursor_pred.column =
                 clip_number(M.cursor_pred.column, 1, #pred_line_content)
 
+            -- TODO: Create a reusable close window function.
+            -- Closes previous window.
+            if M.prev_win_id > 0 then
+                vim.api.nvim_win_close(M.prev_win_id, false)
+                M.action_counter = 0
+                M.prev_win_id = -1
+            end
+
+            -- Opens preview window.
             local buf = vim.api.nvim_create_buf(false, true)
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
             M.prev_win_id = vim.api.nvim_open_win(buf, false, {
@@ -120,10 +129,40 @@ vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     callback = predict,
 })
 
+local prev_win_augroup = vim.api.nvim_create_augroup("CloseHopWindow", { clear = true })
+vim.api.nvim_create_autocmd("CursorMoved", {
+    group = prev_win_augroup,
+    pattern = "*",
+    callback = function()
+        if M.prev_win_id < 1 then
+            return
+        end
+
+        if M.action_counter < 2 then
+            vim.api.nvim_win_set_config(
+                M.prev_win_id,
+                { relative = "cursor", row = -3, col = 0 }
+            )
+            M.action_counter = M.action_counter + 1
+        else
+            vim.api.nvim_win_close(M.prev_win_id, false)
+            M.action_counter = 0
+            M.prev_win_id = -1
+        end
+    end,
+})
+
 ---Hops to the predicted cursor position.
 function M.hop()
     vim.cmd("edit " .. M.cursor_pred.file)
     vim.api.nvim_win_set_cursor(0, { M.cursor_pred.line, M.cursor_pred.column - 1 })
+    if M.prev_win_id < 1 then
+        return
+    end
+
+    vim.api.nvim_win_close(M.prev_win_id, false)
+    M.action_counter = 0
+    M.prev_win_id = -1
 end
 
 ---Setup function
