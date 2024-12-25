@@ -117,20 +117,6 @@ vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     callback = predict,
 })
 
----Clips the number to the given range
----@param num number Number to clip
----@param min number Inclusive minimum
----@param max number Inclusive maximum
----@return number
-local function clip_number(num, min, max)
-    if num < min then
-        return min
-    elseif num > max then
-        return max
-    end
-    return num
-end
-
 ---Hops to the predicted cursor position.
 function M.hop()
     vim.cmd("edit " .. M.cursor_pred.file)
