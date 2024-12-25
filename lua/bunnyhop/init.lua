@@ -8,7 +8,7 @@ M.defaults = {
 M.cursor_pred = { line = -1, column = -1, file = "" }
 
 -- TODO: Remove all the ".git/..." jumps from the jumplist
-local function _create_prompt()
+local function create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
     -- lnum -> line_num
@@ -44,7 +44,7 @@ end
 local function predict()
     local hf_url =
         "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct/v1/chat/completions"
-    local prompt = _create_prompt()
+    local prompt = create_prompt()
     local request_body = vim.json.encode {
         model = "Qwen/Qwen2.5-Coder-32B-Instruct",
         messages = { { role = "user", content = prompt } },
