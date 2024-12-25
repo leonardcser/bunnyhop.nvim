@@ -5,6 +5,8 @@ M.defaults = {
     ---@type string
     api_key = "",
 }
+-- TODO: Check if making these variables local works.
+-- If so do it, its probably better to not expose these to the user.
 M.cursor_pred = { line = -1, column = -1, file = "" }
 M.prev_win_id = -1
 M.action_counter = 0
@@ -20,7 +22,7 @@ local function create_prompt()
     local jumplist = vim.fn.getjumplist()[1]
     local csv_jumplist = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
 
-    
+    -- TODO: Skip adding jumps to files in the .git directory.
     for indx, jump_row in pairs(jumplist) do
         csv_jumplist = csv_jumplist
             .. indx
@@ -154,6 +156,15 @@ vim.api.nvim_create_autocmd("CursorMoved", {
 
 ---Hops to the predicted cursor position.
 function M.hop()
+    -- TODO: Fix error caused by not writing the current buffer(I think) before jumping.
+    -- I wonder if its actually because of that because it didn't write the file
+    -- since I'm able to use harpoon without writing my current open file.
+    -- The error looks something like so:
+    --E5108: Error executing lua: vim/_editor.lua:0: nvim_exec2(): Vim(edit):E37: No write since last change (add ! to override)
+    --stack traceback:
+    --        [C]: in function 'nvim_exec2'
+    --        vim/_editor.lua: in function 'cmd'
+    --        /Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:161: in function </Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:160>
     vim.cmd("edit " .. M.cursor_pred.file)
     vim.api.nvim_win_set_cursor(0, { M.cursor_pred.line, M.cursor_pred.column - 1 })
     if M.prev_win_id < 1 then
