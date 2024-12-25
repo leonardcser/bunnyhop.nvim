@@ -6,6 +6,8 @@ M.defaults = {
     api_key = "",
 }
 M.cursor_pred = { line = -1, column = -1, file = "" }
+M.prev_win_id = -1
+M.action_counter = 0
 
 -- TODO: Remove all the ".git/..." jumps from the jumplist
 local function create_prompt()
@@ -18,6 +20,7 @@ local function create_prompt()
     local jumplist = vim.fn.getjumplist()[1]
     local csv_jumplist = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
 
+    
     for indx, jump_row in pairs(jumplist) do
         csv_jumplist = csv_jumplist
             .. indx
@@ -98,7 +101,7 @@ local function predict()
 
             local buf = vim.api.nvim_create_buf(false, true)
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
-            M.pred_preview_win = vim.api.nvim_open_win(buf, false, {
+            M.prev_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
                 row = -3,
                 col = 0,
