@@ -46,10 +46,10 @@ local function predict()
         "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct/v1/chat/completions"
     local prompt = _create_prompt()
     local request_body = vim.json.encode {
-        ["model"] = "Qwen/Qwen2.5-Coder-32B-Instruct",
-        ["messages"] = { { ["role"] = "user", ["content"] = prompt } },
-        ["max_tokens"] = 30,
-        ["stream"] = false,
+        model = "Qwen/Qwen2.5-Coder-32B-Instruct",
+        messages = { { role = "user", content = prompt } },
+        max_tokens = 30,
+        stream = false,
     }
     vim.system({
         "curl",
