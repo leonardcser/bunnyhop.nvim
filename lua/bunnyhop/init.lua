@@ -73,14 +73,11 @@ local function predict()
         M.cursor_pred.file = prediction[3]
     end)
 end
-vim.api.nvim_create_autocmd(
-    { "ModeChanged" },
-    {
-        group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
-        pattern = "*:n",
-        callback = predict,
-    }
-)
+vim.api.nvim_create_autocmd({ "ModeChanged" }, {
+    group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
+    pattern = "i:n",
+    callback = predict,
+})
 
 function M.hop()
     vim.cmd("edit " .. M.cursor_pred.file)
