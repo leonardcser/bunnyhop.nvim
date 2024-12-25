@@ -68,9 +68,47 @@ local function predict()
 
         local response = vim.json.decode(command_result.stdout)
         local prediction = vim.json.decode(response.choices[1].message.content)
+        M.cursor_pred.file = prediction[3]
         M.cursor_pred.line = prediction[1]
         M.cursor_pred.column = prediction[2]
-        M.cursor_pred.file = prediction[3]
+        -- "Hack" to get around being unable to call vim functions in a callback.
+        vim.schedule(function()
+            -- Clipping model prediction because it predicts out of range values often.
+            local function clip_number(num, min, max)
+                if num < min then
+                    return min
+                elseif num > max then
+                    return max
+                end
+                return num
+            end
+
+            local buf_num = vim.fn.bufnr(M.cursor_pred.file)
+            M.cursor_pred.line =
+                clip_number(M.cursor_pred.line, 1, vim.api.nvim_buf_line_count(buf_num))
+            local pred_line_content = vim.api.nvim_buf_get_lines(
+                buf_num,
+                M.cursor_pred.line - 1,
+                M.cursor_pred.line,
+                true
+            )[1]
+            print(pred_line_content)
+            M.cursor_pred.column =
+                clip_number(M.cursor_pred.column, 1, #pred_line_content)
+
+            local buf = vim.api.nvim_create_buf(false, true)
+            vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
+            M.pred_preview_win = vim.api.nvim_open_win(buf, false, {
+                relative = "cursor",
+                row = -3,
+                col = 0,
+                width = 15,
+                height = 1,
+                style = "minimal",
+                border = "single",
+                title = "───Next Hop",
+            })
+        end)
     end)
 end
 vim.api.nvim_create_autocmd({ "ModeChanged" }, {
@@ -96,14 +134,7 @@ end
 ---Hops to the predicted cursor position.
 function M.hop()
     vim.cmd("edit " .. M.cursor_pred.file)
-    -- Clipping model prediction because it predicts out of range values often.
-    local line_pred = clip_number(M.cursor_pred.line, 1, vim.api.nvim_buf_line_count(0))
-    local column_pred = clip_number(
-        M.cursor_pred.column,
-        1,
-        #vim.api.nvim_buf_get_lines(0, line_pred - 1, line_pred, true)[1]
-    )
-    vim.api.nvim_win_set_cursor(0, { line_pred, column_pred - 1 })
+    vim.api.nvim_win_set_cursor(0, { M.cursor_pred.line, M.cursor_pred.column - 1 })
 end
 
 ---Setup function
