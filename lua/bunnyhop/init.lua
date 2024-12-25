@@ -97,7 +97,6 @@ local function predict()
                 M.cursor_pred.line,
                 true
             )[1]
-            print(pred_line_content)
             M.cursor_pred.column =
                 clip_number(M.cursor_pred.column, 1, #pred_line_content)
 
