@@ -100,11 +100,12 @@ local function predict()
                 M.cursor_pred.line,
                 true
             )[1]
-                -- TODO: Remove left trailing white space from pred_line_content
+            pred_line_content = pred_line_content:gsub("^%s+", "")
             M.cursor_pred.column =
                 clip_number(M.cursor_pred.column, 1, #pred_line_content)
 
             -- TODO: Create a reusable close window function.
+            -- In this function, make sure there is a if statement that handle a nonexistant buffer/window ID.
             -- Closes previous window.
             if M.prev_win_id > 0 then
                 vim.api.nvim_win_close(M.prev_win_id, false)
