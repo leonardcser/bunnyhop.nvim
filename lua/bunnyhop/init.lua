@@ -175,6 +175,7 @@ vim.api.nvim_create_autocmd("InsertEnter", {
 })
 
 ---Hops to the predicted cursor position.
+---TODO: Add hop to the jumplist to allow a person to go back to their original position with <C-o>.
 function M.hop()
     local buf_num = vim.fn.bufnr(M.cursor_pred.file, true)
     vim.fn.bufload(buf_num)
