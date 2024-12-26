@@ -24,7 +24,6 @@ local function create_prompt()
     local jumplist = vim.fn.getjumplist()[1]
     local csv_jumplist = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
 
-    -- TODO: Skip adding jumps to files in the .git directory.
     for indx, jump_row in pairs(jumplist) do
         local buf_name = vim.api.nvim_buf_get_name(jump_row["bufnr"])
         if buf_name:match(".git") == nil then
