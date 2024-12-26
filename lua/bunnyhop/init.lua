@@ -5,7 +5,7 @@ M.defaults = {
     ---@type string
     api_key = "",
     ---@type number
-    max_prev_width = 20
+    max_prev_width = 20,
 }
 -- TODO: Check if making these variables local works.
 -- If so do it, its probably better to not expose these to the user.
@@ -116,14 +116,23 @@ local function predict()
 
             -- Opens preview window.
             local buf = vim.api.nvim_create_buf(false, true)
-            local prev_win_title = vim.fs.basename(M.cursor_pred.file) .. " : " .. M.cursor_pred.line
+            local prev_win_title = vim.fs.basename(M.cursor_pred.file)
+                .. " : "
+                .. M.cursor_pred.line
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
             print(M.defaults.max_prev_width, #pred_line_content, #prev_win_title)
             M.prev_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
                 row = 1,
                 col = 0,
-                width = vim.fn.max{1, vim.fn.min{M.defaults.max_prev_width, #pred_line_content, #prev_win_title}},
+                width = vim.fn.max {
+                    1,
+                    vim.fn.min {
+                        M.defaults.max_prev_width,
+                        #pred_line_content,
+                        #prev_win_title,
+                    },
+                },
                 height = 1,
                 style = "minimal",
                 border = "single",
