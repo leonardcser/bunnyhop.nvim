@@ -116,7 +116,7 @@ local function predict()
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
             M.prev_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
-                row = -3,
+                row = 1,
                 col = 0,
                 width = 15,
                 height = 1,
@@ -142,10 +142,10 @@ vim.api.nvim_create_autocmd("CursorMoved", {
             return
         end
 
-        if M.action_counter < 2 then
+        if M.action_counter < 1 then
             vim.api.nvim_win_set_config(
                 M.prev_win_id,
-                { relative = "cursor", row = -3, col = 0 }
+                { relative = "cursor", row = 1, col = 0 }
             )
             M.action_counter = M.action_counter + 1
         else
