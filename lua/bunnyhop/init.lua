@@ -100,6 +100,7 @@ local function predict()
                 M.cursor_pred.line,
                 true
             )[1]
+                -- TODO: Remove left trailing white space from pred_line_content
             M.cursor_pred.column =
                 clip_number(M.cursor_pred.column, 1, #pred_line_content)
 
@@ -113,6 +114,7 @@ local function predict()
 
             -- Opens preview window.
             local buf = vim.api.nvim_create_buf(false, true)
+            local prev_win_title = vim.fs.basename(M.cursor_pred.file) .. " : " .. M.cursor_pred.line
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
             M.prev_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
@@ -122,7 +124,7 @@ local function predict()
                 height = 1,
                 style = "minimal",
                 border = "single",
-                title = "───Next Hop",
+                title = prev_win_title,
             })
         end)
     end)
