@@ -118,11 +118,12 @@ local function predict()
             local buf = vim.api.nvim_create_buf(false, true)
             local prev_win_title = vim.fs.basename(M.cursor_pred.file) .. " : " .. M.cursor_pred.line
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
+            print(M.defaults.max_prev_width, #pred_line_content, #prev_win_title)
             M.prev_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
                 row = 1,
                 col = 0,
-                width = vim.fn.min{M.defaults.max_prev_width, #pred_line_content, #prev_win_title},
+                width = vim.fn.max{1, vim.fn.min{M.defaults.max_prev_width, #pred_line_content, #prev_win_title}},
                 height = 1,
                 style = "minimal",
                 border = "single",
@@ -174,6 +175,7 @@ vim.api.nvim_create_autocmd("InsertEnter", {
 })
 
 ---Hops to the predicted cursor position.
+---TODO: Skip hop if either cursor line or column is -1.
 function M.hop()
     -- Adds current position to the jumplist so you can <C-o> back to it if you don't like where you hopped.
     vim.cmd("normal! m'")
