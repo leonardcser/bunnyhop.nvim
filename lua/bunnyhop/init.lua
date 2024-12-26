@@ -180,6 +180,7 @@ function M.hop()
     --        [C]: in function 'nvim_exec2'
     --        vim/_editor.lua: in function 'cmd'
     --        /Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:161: in function </Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:160>
+    -- TODO: Only run the "edit" command when the predicted file is not the current one open.
     vim.cmd("edit " .. M.cursor_pred.file)
     vim.api.nvim_win_set_cursor(0, { M.cursor_pred.line, M.cursor_pred.column - 1 })
     if M.prev_win_id < 1 then
