@@ -176,15 +176,6 @@ vim.api.nvim_create_autocmd("InsertEnter", {
 
 ---Hops to the predicted cursor position.
 function M.hop()
-    -- TODO: Fix error caused by not writing the current buffer(I think) before jumping.
-    -- I wonder if its actually because of that because it didn't write the file
-    -- since I'm able to use harpoon without writing my current open file.
-    -- The error looks something like so:
-    --E5108: Error executing lua: vim/_editor.lua:0: nvim_exec2(): Vim(edit):E37: No write since last change (add ! to override)
-    --stack traceback:
-    --        [C]: in function 'nvim_exec2'
-    --        vim/_editor.lua: in function 'cmd'
-    --        /Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:161: in function </Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:160>
     -- TODO: Only run the "edit" command when the predicted file is not the current one open.
     local buf_num = vim.fn.bufnr(M.cursor_pred.file, true)
     vim.fn.bufload(buf_num)
