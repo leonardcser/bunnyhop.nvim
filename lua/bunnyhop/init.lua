@@ -1,7 +1,8 @@
 local M = {}
 
+--- Default config, gets overriden with user config options as needed.
 ---@class bhop.opts
-M.defaults = {
+M.config = {
     ---@type string
     api_key = "",
     ---@type number
@@ -120,7 +121,7 @@ local function predict()
                 .. " : "
                 .. M.cursor_pred.line
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
-            print(M.defaults.max_prev_width, #pred_line_content, #prev_win_title)
+            print(M.config.max_prev_width, #pred_line_content, #prev_win_title)
             M.prev_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
                 row = 1,
@@ -128,7 +129,7 @@ local function predict()
                 width = vim.fn.max {
                     1,
                     vim.fn.min {
-                        M.defaults.max_prev_width,
+                        M.config.max_prev_width,
                         #pred_line_content,
                         #prev_win_title,
                     },
@@ -205,13 +206,11 @@ function M.hop()
 end
 
 ---Setup function
----TODO: Fix default settings application. If only 1 was given, it doesn't apply any of the other defaults.
 ---@param opts? bhop.opts
 function M.setup(opts)
-    if opts == nil then
-        M.config = M.defaults
-    else
-        M.config = opts
+    ---@diagnostic disable-next-line: param-type-mismatch
+    for opt_key, opt_val in pairs(opts) do
+        M.config[opt_key] = opt_val
     end
 
     if #M.config.api_key == 0 then
