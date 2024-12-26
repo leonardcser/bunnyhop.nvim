@@ -91,6 +91,7 @@ local function predict()
                 return num
             end
 
+            -- TODO: Ensure buff_num exists before using it.
             local buf_num = vim.fn.bufnr(M.cursor_pred.file)
             M.cursor_pred.line =
                 clip_number(M.cursor_pred.line, 1, vim.api.nvim_buf_line_count(buf_num))
@@ -183,8 +184,11 @@ vim.api.nvim_create_autocmd("InsertEnter", {
 })
 
 ---Hops to the predicted cursor position.
----TODO: Skip hop if either cursor line or column is -1.
 function M.hop()
+    if M.cursor_pred.line == -1 or M.cursor_pred.column == -1 then
+        return
+    end
+
     -- Adds current position to the jumplist so you can <C-o> back to it if you don't like where you hopped.
     vim.cmd("normal! m'")
     local buf_num = vim.fn.bufnr(M.cursor_pred.file, true)
