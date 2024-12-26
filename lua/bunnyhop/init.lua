@@ -24,15 +24,18 @@ local function create_prompt()
 
     -- TODO: Skip adding jumps to files in the .git directory.
     for indx, jump_row in pairs(jumplist) do
-        csv_jumplist = csv_jumplist
-            .. indx
-            .. ","
-            .. jump_row["lnum"]
-            .. ","
-            .. jump_row["col"]
-            .. ","
-            .. vim.api.nvim_buf_get_name(jump_row["bufnr"])
-            .. "\n"
+        local buf_name = vim.api.nvim_buf_get_name(jump_row["bufnr"])
+        if buf_name:match(".git") == nil then
+            csv_jumplist = csv_jumplist
+                .. indx
+                .. ","
+                .. jump_row["lnum"]
+                .. ","
+                .. jump_row["col"]
+                .. ","
+                .. buf_name
+                .. "\n"
+        end
     end
 
     local prompt = "Predict next cursor position based on the following information.\n"
