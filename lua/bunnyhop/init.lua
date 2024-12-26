@@ -4,6 +4,8 @@ local M = {}
 M.defaults = {
     ---@type string
     api_key = "",
+    ---@type number
+    max_prev_width = 20
 }
 -- TODO: Check if making these variables local works.
 -- If so do it, its probably better to not expose these to the user.
@@ -121,7 +123,7 @@ local function predict()
                 relative = "cursor",
                 row = 1,
                 col = 0,
-                width = 15,
+                width = vim.fn.min{M.defaults.max_prev_width, #pred_line_content, #prev_win_title},
                 height = 1,
                 style = "minimal",
                 border = "single",
@@ -196,6 +198,7 @@ function M.hop()
 end
 
 ---Setup function
+---TODO: Fix default settings application. If only 1 was given, it doesn't apply any of the other defaults.
 ---@param opts? bhop.opts
 function M.setup(opts)
     if opts == nil then
