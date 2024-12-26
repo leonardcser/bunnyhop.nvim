@@ -176,7 +176,6 @@ vim.api.nvim_create_autocmd("InsertEnter", {
 
 ---Hops to the predicted cursor position.
 function M.hop()
-    -- TODO: Only run the "edit" command when the predicted file is not the current one open.
     local buf_num = vim.fn.bufnr(M.cursor_pred.file, true)
     vim.fn.bufload(buf_num)
     vim.api.nvim_set_current_buf(buf_num)
