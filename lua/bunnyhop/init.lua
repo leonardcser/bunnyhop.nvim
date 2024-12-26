@@ -13,7 +13,6 @@ M.cursor_pred = { line = -1, column = -1, file = "" }
 M.prev_win_id = -1
 M.action_counter = 0
 
--- TODO: Remove all the ".git/..." jumps from the jumplist
 local function create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
