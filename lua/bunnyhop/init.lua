@@ -89,14 +89,13 @@ local function predict()
             M.cursor_pred.file = ""
         end
         M.cursor_pred.line = pred[1]
-        if type( M.cursor_pred.line ) ~= "number" then
+        if type(M.cursor_pred.line) ~= "number" then
             M.cursor_pred = 0
         end
         M.cursor_pred.column = pred[2]
-        if type( M.cursor_pred.column ) ~= "number" then
+        if type(M.cursor_pred.column) ~= "number" then
             M.cursor_pred.column = 0
         end
-
 
         -- "Hack" to get around being unable to call vim functions in a callback.
         vim.schedule(function()
