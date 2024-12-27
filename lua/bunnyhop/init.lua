@@ -8,8 +8,6 @@ M.config = {
     ---@type number
     max_prev_width = 20,
 }
--- TODO: Check if making these variables local works.
--- If so do it, its probably better to not expose these to the user.
 local globals = {
     cursor_pred = { line = 0, column = 0, file = "" },
     prev_win_id = -1,
