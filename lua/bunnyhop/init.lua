@@ -138,7 +138,6 @@ local function predict()
                 .. " : "
                 .. M.cursor_pred.line
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
-            print(M.cursor_pred.file, M.config.max_prev_width, #pred_line_content, #prev_win_title)
             M.prev_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
                 row = 1,
