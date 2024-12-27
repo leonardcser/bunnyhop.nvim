@@ -76,14 +76,27 @@ local function predict()
         end
 
         local response = vim.json.decode(command_result.stdout)
-        -- TODO: Deal with the following possible outputs of the LLM:
-        -- Correctly formatted response eg. [10, 10, "/.../bunnyhop.nvim/lua/bunnyhop/init.lua]"
-        -- Partially Corretly formatted response (Correct structure but incorrect data) eg. [word, 1, ""]
-        -- Incorrectly formatted response (Incorrect structure) {1word: ""]
-        local prediction = vim.json.decode(response.choices[1].message.content)
-        M.cursor_pred.file = prediction[3]
-        M.cursor_pred.line = prediction[1]
-        M.cursor_pred.column = prediction[2]
+        local err, pred = pcall(vim.json.decode, response.choices[1].message.content)
+        if err then
+            M.cursor_pred.file = ""
+            M.cursor_pred.line = 0
+            M.cursor_pred.column = 0
+        end
+
+        M.cursor_pred.file = pred[3]
+        if vim.fn.filereadable(M.cursor_pred.file) == 0 then
+            M.cursor_pred.file = ""
+        end
+        M.cursor_pred.line = pred[1]
+        if type( M.cursor_pred.line ) ~= "number" then
+            M.cursor_pred = 0
+        end
+        M.cursor_pred.column = pred[2]
+        if type( M.cursor_pred.column ) ~= "number" then
+            M.cursor_pred.column = 0
+        end
+
+
         -- "Hack" to get around being unable to call vim functions in a callback.
         vim.schedule(function()
             -- Clipping model prediction because it predicts out of range values often.
