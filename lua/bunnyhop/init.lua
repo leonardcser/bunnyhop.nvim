@@ -10,8 +10,7 @@ M.config = {
 }
 -- TODO: Check if making these variables local works.
 -- If so do it, its probably better to not expose these to the user.
--- TODO: Set Line and Column default values 0
-M.cursor_pred = { line = -1, column = -1, file = "" }
+M.cursor_pred = { line = 0, column = 0, file = "" }
 M.prev_win_id = -1
 M.action_counter = 0
 
