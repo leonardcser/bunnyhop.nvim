@@ -10,9 +10,11 @@ M.config = {
 }
 -- TODO: Check if making these variables local works.
 -- If so do it, its probably better to not expose these to the user.
-M.cursor_pred = { line = 0, column = 0, file = "" }
-M.prev_win_id = -1
-M.action_counter = 0
+local globals = {
+    cursor_pred = { line = 0, column = 0, file = "" },
+    prev_win_id = -1,
+    action_counter = 0
+}
 
 local function create_prompt()
     -- Dict keys to column name convertor
@@ -27,7 +29,10 @@ local function create_prompt()
     -- TODO: Figure out how neovim stores all the buffer numbers so that it can jump to between them and not get a "bufnr was not found" error
     for indx, jump_row in pairs(jumplist) do
         -- TODO: handle buffer number doesn't exist and causes an error when trying to get its file name.
-        local buf_name = vim.api.nvim_buf_get_name(jump_row["bufnr"])
+        local buf_name = ""
+        if vim.fn.bufexists(jump_row["bufnr"]) then
+            buf_name = vim.api.nvim_buf_get_name(jump_row["bufnr"])
+        end
         if buf_name:match(".git") == nil then
             csv_jumplist = csv_jumplist
                 .. indx
@@ -80,22 +85,22 @@ local function predict()
         local response = vim.json.decode(command_result.stdout)
         local err, pred = pcall(vim.json.decode, response.choices[1].message.content)
         if err then
-            M.cursor_pred.file = ""
-            M.cursor_pred.line = 0
-            M.cursor_pred.column = 0
+            globals.cursor_pred.file = ""
+            globals.cursor_pred.line = 0
+            globals.cursor_pred.column = 0
         end
 
-        M.cursor_pred.file = pred[3]
-        if vim.fn.filereadable(M.cursor_pred.file) == 0 then
-            M.cursor_pred.file = ""
+        globals.cursor_pred.file = pred[3]
+        if vim.fn.filereadable(globals.cursor_pred.file) == 0 then
+            globals.cursor_pred.file = ""
         end
-        M.cursor_pred.line = pred[1]
-        if type(M.cursor_pred.line) ~= "number" then
-            M.cursor_pred = 0
+        globals.cursor_pred.line = pred[1]
+        if type(globals.cursor_pred.line) ~= "number" then
+            globals.cursor_pred = 0
         end
-        M.cursor_pred.column = pred[2]
-        if type(M.cursor_pred.column) ~= "number" then
-            M.cursor_pred.column = 0
+        globals.cursor_pred.column = pred[2]
+        if type(globals.cursor_pred.column) ~= "number" then
+            globals.cursor_pred.column = 0
         end
 
         -- "Hack" to get around being unable to call vim functions in a callback.
@@ -111,35 +116,35 @@ local function predict()
             end
 
             -- TODO: Ensure buff_num exists before using it.
-            local buf_num = vim.fn.bufnr(M.cursor_pred.file)
-            M.cursor_pred.line =
-                clip_number(M.cursor_pred.line, 1, vim.api.nvim_buf_line_count(buf_num))
+            local buf_num = vim.fn.bufnr(globals.cursor_pred.file)
+            globals.cursor_pred.line =
+                clip_number(globals.cursor_pred.line, 1, vim.api.nvim_buf_line_count(buf_num))
             local pred_line_content = vim.api.nvim_buf_get_lines(
                 buf_num,
-                M.cursor_pred.line - 1,
-                M.cursor_pred.line,
+                globals.cursor_pred.line - 1,
+                globals.cursor_pred.line,
                 true
             )[1]
             pred_line_content = pred_line_content:gsub("^%s+", "")
-            M.cursor_pred.column =
-                clip_number(M.cursor_pred.column, 1, #pred_line_content)
+            globals.cursor_pred.column =
+                clip_number(globals.cursor_pred.column, 1, #pred_line_content)
 
             -- TODO: Create a reusable close window function.
             -- In this function, make sure there is a if statement that handle a nonexistant buffer/window ID.
             -- Closes previous window.
-            if M.prev_win_id > 0 then
+            if globals.prev_win_id > 0 then
                 vim.api.nvim_win_close(M.prev_win_id, false)
-                M.action_counter = 0
-                M.prev_win_id = -1
+                globals.action_counter = 0
+                globals.prev_win_id = -1
             end
 
             -- Opens preview window.
             local buf = vim.api.nvim_create_buf(false, true)
-            local prev_win_title = vim.fs.basename(M.cursor_pred.file)
+            local prev_win_title = vim.fs.basename(globals.cursor_pred.file)
                 .. " : "
-                .. M.cursor_pred.line
+                .. globals.cursor_pred.line
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
-            M.prev_win_id = vim.api.nvim_open_win(buf, false, {
+            globals.prev_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
                 row = 1,
                 col = 0,
@@ -172,20 +177,20 @@ vim.api.nvim_create_autocmd("CursorMoved", {
     group = prev_win_augroup,
     pattern = "*",
     callback = function()
-        if M.prev_win_id < 1 then
+        if globals.prev_win_id < 1 then
             return
         end
 
-        if M.action_counter < 1 then
+        if globals.action_counter < 1 then
             vim.api.nvim_win_set_config(
-                M.prev_win_id,
+                globals.prev_win_id,
                 { relative = "cursor", row = 1, col = 0 }
             )
-            M.action_counter = M.action_counter + 1
+            globals.action_counter = globals.action_counter + 1
         else
-            vim.api.nvim_win_close(M.prev_win_id, false)
-            M.action_counter = 0
-            M.prev_win_id = -1
+            vim.api.nvim_win_close(globals.prev_win_id, false)
+            globals.action_counter = 0
+            globals.prev_win_id = -1
         end
     end,
 })
@@ -193,35 +198,35 @@ vim.api.nvim_create_autocmd("InsertEnter", {
     group = prev_win_augroup,
     pattern = "*",
     callback = function()
-        if M.prev_win_id < 1 then
+        if globals.prev_win_id < 1 then
             return
         end
 
-        vim.api.nvim_win_close(M.prev_win_id, false)
-        M.action_counter = 0
-        M.prev_win_id = -1
+        vim.api.nvim_win_close(globals.prev_win_id, false)
+        globals.action_counter = 0
+        globals.prev_win_id = -1
     end,
 })
 
 ---Hops to the predicted cursor position.
 function M.hop()
-    if M.cursor_pred.line == -1 or M.cursor_pred.column == -1 then
+    if globals.cursor_pred.line == -1 or globals.cursor_pred.column == -1 then
         return
     end
 
     -- Adds current position to the jumplist so you can <C-o> back to it if you don't like where you hopped.
     vim.cmd("normal! m'")
-    local buf_num = vim.fn.bufnr(M.cursor_pred.file, true)
+    local buf_num = vim.fn.bufnr(globals.cursor_pred.file, true)
     vim.fn.bufload(buf_num)
     vim.api.nvim_set_current_buf(buf_num)
-    vim.api.nvim_win_set_cursor(0, { M.cursor_pred.line, M.cursor_pred.column - 1 })
-    if M.prev_win_id < 1 then
+    vim.api.nvim_win_set_cursor(0, { globals.cursor_pred.line, globals.cursor_pred.column - 1 })
+    if globals.prev_win_id < 1 then
         return
     end
 
-    vim.api.nvim_win_close(M.prev_win_id, false)
-    M.action_counter = 0
-    M.prev_win_id = -1
+    vim.api.nvim_win_close(globals.prev_win_id, false)
+    globals.action_counter = 0
+    globals.prev_win_id = -1
 end
 
 ---Setup function
