@@ -25,6 +25,7 @@ local function create_prompt()
     local csv_jumplist = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
 
     for indx, jump_row in pairs(jumplist) do
+        -- TODO: handle buffer number doesn't exist and causes an error when trying to get its file name.
         local buf_name = vim.api.nvim_buf_get_name(jump_row["bufnr"])
         if buf_name:match(".git") == nil then
             csv_jumplist = csv_jumplist
