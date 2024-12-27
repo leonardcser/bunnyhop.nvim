@@ -134,7 +134,7 @@ local function predict()
                     1,
                     vim.fn.min {
                         M.config.max_prev_width,
-                        #pred_line_content,
+                        #pred_line_content, --TODO: take the max of line content and preview window title since we want the longest to win so they don't cut each other off. Only max_prev_width
                         #prev_win_title,
                     },
                 },
