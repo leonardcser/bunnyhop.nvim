@@ -26,7 +26,6 @@ local function create_prompt()
 
     -- TODO: Figure out how neovim stores all the buffer numbers so that it can jump to between them and not get a "bufnr was not found" error
     for indx, jump_row in pairs(jumplist) do
-        -- TODO: handle buffer number doesn't exist and causes an error when trying to get its file name.
         local buf_name = ""
         if vim.fn.bufexists(jump_row["bufnr"]) then
             buf_name = vim.api.nvim_buf_get_name(jump_row["bufnr"])
