@@ -112,8 +112,11 @@ local function predict()
                 return num
             end
 
-            -- TODO: Ensure buff_num exists before using it.
             local buf_num = vim.fn.bufnr(globals.cursor_pred.file)
+            if ~vim.fn.bufexists(buf_num) then
+                vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
+                return
+            end
             globals.cursor_pred.line =
                 clip_number(globals.cursor_pred.line, 1, vim.api.nvim_buf_line_count(buf_num))
             local pred_line_content = vim.api.nvim_buf_get_lines(
