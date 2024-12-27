@@ -76,6 +76,10 @@ local function predict()
         end
 
         local response = vim.json.decode(command_result.stdout)
+        -- TODO: Deal with the following possible outputs of the LLM:
+        -- Correctly formatted response eg. [10, 10, "/.../bunnyhop.nvim/lua/bunnyhop/init.lua]"
+        -- Partially Corretly formatted response (Correct structure but incorrect data) eg. [word, 1, ""]
+        -- Incorrectly formatted response (Incorrect structure) {1word: ""]
         local prediction = vim.json.decode(response.choices[1].message.content)
         M.cursor_pred.file = prediction[3]
         M.cursor_pred.line = prediction[1]
@@ -121,7 +125,7 @@ local function predict()
                 .. " : "
                 .. M.cursor_pred.line
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
-            print(M.config.max_prev_width, #pred_line_content, #prev_win_title)
+            print(M.cursor_pred.file, M.config.max_prev_width, #pred_line_content, #prev_win_title)
             M.prev_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
                 row = 1,
