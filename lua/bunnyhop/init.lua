@@ -11,8 +11,18 @@ M.config = {
 local globals = {
     cursor_pred = { line = 0, column = 0, file = "" },
     prev_win_id = -1,
-    action_counter = 0
+    action_counter = 0,
 }
+
+local function close_prev_win()
+    if globals.prev_win_id < 0 then
+        return
+    end
+
+    vim.api.nvim_win_close(globals.prev_win_id, false)
+    globals.action_counter = 0
+    globals.prev_win_id = -1
+end
 
 local function create_prompt()
     -- Dict keys to column name convertor
@@ -113,12 +123,18 @@ local function predict()
             end
 
             local buf_num = vim.fn.bufnr(globals.cursor_pred.file)
-            if ~vim.fn.bufexists(buf_num) then
-                vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
+            if vim.fn.bufexists(buf_num) == 0 then
+                vim.notify(
+                    "Buffer number: " .. buf_num .. " doesn't exist",
+                    vim.log.levels.WARN
+                )
                 return
             end
-            globals.cursor_pred.line =
-                clip_number(globals.cursor_pred.line, 1, vim.api.nvim_buf_line_count(buf_num))
+            globals.cursor_pred.line = clip_number(
+                globals.cursor_pred.line,
+                1,
+                vim.api.nvim_buf_line_count(buf_num)
+            )
             local pred_line_content = vim.api.nvim_buf_get_lines(
                 buf_num,
                 globals.cursor_pred.line - 1,
@@ -129,16 +145,9 @@ local function predict()
             globals.cursor_pred.column =
                 clip_number(globals.cursor_pred.column, 1, #pred_line_content)
 
-            -- TODO: Create a reusable close window function.
-            -- In this function, make sure there is a if statement that handle a nonexistant buffer/window ID.
-            -- Closes previous window.
-            if globals.prev_win_id > 0 then
-                vim.api.nvim_win_close(M.prev_win_id, false)
-                globals.action_counter = 0
-                globals.prev_win_id = -1
-            end
-
             -- Opens preview window.
+            -- Closing the existing preview window if it exist to make space for the newly created window.
+            close_prev_win()
             local buf = vim.api.nvim_create_buf(false, true)
             local prev_win_title = vim.fs.basename(globals.cursor_pred.file)
                 .. " : "
@@ -177,10 +186,9 @@ vim.api.nvim_create_autocmd("CursorMoved", {
     group = prev_win_augroup,
     pattern = "*",
     callback = function()
-        if globals.prev_win_id < 1 then
+        if globals.prev_win_id < 0 then
             return
         end
-
         if globals.action_counter < 1 then
             vim.api.nvim_win_set_config(
                 globals.prev_win_id,
@@ -188,9 +196,7 @@ vim.api.nvim_create_autocmd("CursorMoved", {
             )
             globals.action_counter = globals.action_counter + 1
         else
-            vim.api.nvim_win_close(globals.prev_win_id, false)
-            globals.action_counter = 0
-            globals.prev_win_id = -1
+            close_prev_win()
         end
     end,
 })
@@ -198,13 +204,7 @@ vim.api.nvim_create_autocmd("InsertEnter", {
     group = prev_win_augroup,
     pattern = "*",
     callback = function()
-        if globals.prev_win_id < 1 then
-            return
-        end
-
-        vim.api.nvim_win_close(globals.prev_win_id, false)
-        globals.action_counter = 0
-        globals.prev_win_id = -1
+        close_prev_win()
     end,
 })
 
@@ -219,14 +219,11 @@ function M.hop()
     local buf_num = vim.fn.bufnr(globals.cursor_pred.file, true)
     vim.fn.bufload(buf_num)
     vim.api.nvim_set_current_buf(buf_num)
-    vim.api.nvim_win_set_cursor(0, { globals.cursor_pred.line, globals.cursor_pred.column - 1 })
-    if globals.prev_win_id < 1 then
-        return
-    end
-
-    vim.api.nvim_win_close(globals.prev_win_id, false)
-    globals.action_counter = 0
-    globals.prev_win_id = -1
+    vim.api.nvim_win_set_cursor(
+        0,
+        { globals.cursor_pred.line, globals.cursor_pred.column - 1 }
+    )
+    close_prev_win()
 end
 
 ---Setup function
