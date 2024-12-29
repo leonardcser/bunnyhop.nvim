@@ -9,19 +9,24 @@ M.config = {
     max_prev_width = 20,
 }
 local globals = {
-    cursor_pred = { line = 0, column = 0, file = "" },
-    prev_win_id = -1,
-    action_counter = 0,
+    DEFAULT_PREVIOUS_WIN_ID = 0,
+    DEFAULT_ACTION_COUNTER = 0,
+    DEFAULT_CURSOR_PRED_LINE = 0,
+    DEFAULT_CURSOR_PRED_COLUMN = 0,
+    DEFAULT_CURSOR_PRED_FILE = "",
 }
+globals.cursor_pred = { line = globals.DEFAULT_CURSOR_PRED_LINE, column = globals.DEFAULT_CURSOR_PRED_COLUMN, file = globals.DEFAULT_CURSOR_PRED_FILE }
+globals.previous_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
+globals.action_counter = globals.DEFAULT_ACTION_COUNTER
 
 local function close_prev_win()
-    if globals.prev_win_id < 0 then
+    if globals.previous_win_id < 0 then
         return
     end
 
-    vim.api.nvim_win_close(globals.prev_win_id, false)
-    globals.action_counter = 0
-    globals.prev_win_id = -1
+    vim.api.nvim_win_close(globals.previous_win_id, false)
+    globals.action_counter = globals.DEFAULT_ACTION_COUNTER
+    globals.previous_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 end
 
 local function create_prompt()
@@ -92,22 +97,22 @@ local function predict()
         local response = vim.json.decode(command_result.stdout)
         local err, pred = pcall(vim.json.decode, response.choices[1].message.content)
         if err then
-            globals.cursor_pred.file = ""
-            globals.cursor_pred.line = 0
-            globals.cursor_pred.column = 0
+            globals.cursor_pred.file = globals.DEFAULT_CURSOR_PRED_FILE
+            globals.cursor_pred.line = globals.DEFAULT_CURSOR_PRED_LINE
+            globals.cursor_pred.column = globals.DEFAULT_CURSOR_PRED_COLUMN
         end
 
         globals.cursor_pred.file = pred[3]
         if vim.fn.filereadable(globals.cursor_pred.file) == 0 then
-            globals.cursor_pred.file = ""
+            globals.cursor_pred.file = globals.DEFAULT_CURSOR_PRED_FILE
         end
         globals.cursor_pred.line = pred[1]
         if type(globals.cursor_pred.line) ~= "number" then
-            globals.cursor_pred = 0
+            globals.cursor_pred.line = globals.DEFAULT_CURSOR_PRED_LINE
         end
         globals.cursor_pred.column = pred[2]
         if type(globals.cursor_pred.column) ~= "number" then
-            globals.cursor_pred.column = 0
+            globals.cursor_pred.column = globals.DEFAULT_CURSOR_PRED_COLUMN
         end
 
         -- "Hack" to get around being unable to call vim functions in a callback.
@@ -153,7 +158,7 @@ local function predict()
                 .. " : "
                 .. globals.cursor_pred.line
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
-            globals.prev_win_id = vim.api.nvim_open_win(buf, false, {
+            globals.previous_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
                 row = 1,
                 col = 0,
@@ -186,12 +191,12 @@ vim.api.nvim_create_autocmd("CursorMoved", {
     group = prev_win_augroup,
     pattern = "*",
     callback = function()
-        if globals.prev_win_id < 0 then
+        if globals.previous_win_id < 0 then
             return
         end
         if globals.action_counter < 1 then
             vim.api.nvim_win_set_config(
-                globals.prev_win_id,
+                globals.previous_win_id,
                 { relative = "cursor", row = 1, col = 0 }
             )
             globals.action_counter = globals.action_counter + 1
