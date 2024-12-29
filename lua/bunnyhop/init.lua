@@ -185,6 +185,36 @@ local function predict()
         end)
     end)
 end
+
+-- TODO: Fix issue triggered by Telescope
+--Error executing vim.schedule lua callback: ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:125: Error executing lua: vim/_editor.lua:0: nvim_exec2()..ModeChanged Autocommands for "i:n": Vim(append):Error executing lua callback: /Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:52: Invalid buffer id: 35
+-- stack traceback:
+--         [C]: in function 'nvim_buf_get_name'
+--         /Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:52: in function 'create_prompt'
+--         /Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:89: in function </Users/maorcohen/src/bunnyhop.nvim/lua/bunnyhop/init.lua:86>
+--         [C]: in function 'nvim_exec2'
+--         vim/_editor.lua: in function 'cmd'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:127: in function <...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:125>
+--         [C]: in function 'nvim_buf_call'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:125: in function 'search_cb_jump'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:622: in function 'callback'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:245: in function ''
+--         vim/_editor.lua: in function <vim/_editor.lua:0>
+-- stack traceback:
+--         [C]: in function 'nvim_exec2'
+--         vim/_editor.lua: in function 'cmd'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:127: in function <...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:125>
+--         [C]: in function 'nvim_buf_call'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:125: in function 'search_cb_jump'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:622: in function 'callback'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:245: in function ''
+--         vim/_editor.lua: in function <vim/_editor.lua:0>
+-- stack traceback:
+--         [C]: in function 'nvim_buf_call'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:125: in function 'search_cb_jump'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:622: in function 'callback'
+--         ...scope.nvim/lua/telescope/previewers/buffer_previewer.lua:245: in function ''
+--         vim/_editor.lua: in function <vim/_editor.lua:0>
 vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
     pattern = "i:n",
