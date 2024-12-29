@@ -187,6 +187,8 @@ vim.api.nvim_create_autocmd({ "ModeChanged" }, {
 })
 
 local prev_win_augroup = vim.api.nvim_create_augroup("CloseHopWindow", { clear = true })
+-- TODO: Find an autocommand event or pattern that only activates when cursor is moved inside the current buffer/in normal mode.
+-- Not when switching between different files.
 vim.api.nvim_create_autocmd("CursorMoved", {
     group = prev_win_augroup,
     pattern = "*",
