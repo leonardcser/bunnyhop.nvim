@@ -203,9 +203,7 @@ vim.api.nvim_create_autocmd("CursorMoved", {
 vim.api.nvim_create_autocmd("InsertEnter", {
     group = prev_win_augroup,
     pattern = "*",
-    callback = function()
-        close_prev_win()
-    end,
+    callback = close_prev_win,
 })
 
 ---Hops to the predicted cursor position.
