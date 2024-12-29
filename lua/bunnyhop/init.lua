@@ -1,5 +1,5 @@
 -- TODO: make this plugin not activate on buffers that are not code related.
-
+--
 local M = {}
 
 --- Default config, gets overriden with user config options as needed.
@@ -17,7 +17,11 @@ local globals = {
     DEFAULT_CURSOR_PRED_COLUMN = 0,
     DEFAULT_CURSOR_PRED_FILE = "",
 }
-globals.cursor_pred = { line = globals.DEFAULT_CURSOR_PRED_LINE, column = globals.DEFAULT_CURSOR_PRED_COLUMN, file = globals.DEFAULT_CURSOR_PRED_FILE }
+globals.cursor_pred = {
+    line = globals.DEFAULT_CURSOR_PRED_LINE,
+    column = globals.DEFAULT_CURSOR_PRED_COLUMN,
+    file = globals.DEFAULT_CURSOR_PRED_FILE,
+}
 globals.previous_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 globals.action_counter = globals.DEFAULT_ACTION_COUNTER
 
@@ -65,9 +69,8 @@ local function create_prompt()
         .. "DO NOT HALLUCINATE!\n"
         .. "# History of Cursor Jumps\n"
         .. csv_jumplist
+        .. vim.api.nvim_exec2("changes", {output = true}).output
 
-    -- TODO: add the change list for each file in the jump list.
-    -- local changelist = vim.api.getchangelist()
     return prompt
 end
 
