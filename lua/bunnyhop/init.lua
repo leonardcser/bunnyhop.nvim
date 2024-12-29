@@ -9,7 +9,7 @@ M.config = {
     max_prev_width = 20,
 }
 local globals = {
-    DEFAULT_PREVIOUS_WIN_ID = 0,
+    DEFAULT_PREVIOUS_WIN_ID = -1,
     DEFAULT_ACTION_COUNTER = 0,
     DEFAULT_CURSOR_PRED_LINE = 0,
     DEFAULT_CURSOR_PRED_COLUMN = 0,
