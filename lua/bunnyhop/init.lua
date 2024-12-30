@@ -76,16 +76,19 @@ local function create_prompt()
         local changelist_csv = ""
         local changelist = vim.fn.getchangelist(buf_num)[1]
         local changelist_start = vim.fn.max({1, #changelist - CHANGELIST_MAX_SIZE})
-        for indx, change_row in pairs(vim.fn.slice(changelist, changelist_start, #changelist)) do
-            changelist_csv = changelist_csv
-                .. indx
-                .. ","
-                .. change_row["lnum"]
-                .. ","
-                .. change_row["col"]
-                .. "\n"
+        changelist = vim.fn.slice(changelist, changelist_start, #changelist)
+        if #changelist ~= 0 then
+            for indx, change_row in pairs(changelist) do
+                changelist_csv = changelist_csv
+                    .. indx
+                    .. ","
+                    .. change_row["lnum"]
+                    .. ","
+                    .. change_row["col"]
+                    .. "\n"
+            end
+            changelists = changelists .. "# Change history of buffer " .. buf_name .. "\n" .. changelist_csv .. "\n"
         end
-        changelists = changelists .. "# Change history of buffer " .. buf_name .. "\n" .. changelist_csv .. "\n"
     end
 
     local prompt = "Predict next cursor position based on the following information.\n"
