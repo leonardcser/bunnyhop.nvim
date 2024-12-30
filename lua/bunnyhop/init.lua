@@ -93,7 +93,7 @@ local function create_prompt()
 
     local prompt = "Predict next cursor position based on the following information.\n"
         .. 'ONLY output the row and column of the cursor in the format [line_num, column, "buffer_name"].\n'
-        .. "DO NOT HALLUCINATE PLEEEEEEEESE!\n" -- for the memes
+        .. "DO NOT HALLUCINATE!\n" -- for the memes
         .. "# History of Cursor Jumps\n"
         .. jumplist_csv
         .. changelists
