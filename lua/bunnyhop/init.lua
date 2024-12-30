@@ -22,17 +22,17 @@ globals.cursor_pred = {
     column = globals.DEFAULT_CURSOR_PRED_COLUMN,
     file = globals.DEFAULT_CURSOR_PRED_FILE,
 }
-globals.previous_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
+globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 globals.action_counter = globals.DEFAULT_ACTION_COUNTER
 
 local function close_prev_win()
-    if globals.previous_win_id < 0 then
+    if globals.preview_win_id < 0 then
         return
     end
 
-    vim.api.nvim_win_close(globals.previous_win_id, false)
+    vim.api.nvim_win_close(globals.preview_win_id, false)
     globals.action_counter = globals.DEFAULT_ACTION_COUNTER
-    globals.previous_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
+    globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 end
 
 local function create_prompt()
@@ -191,7 +191,7 @@ local function predict()
                 .. " : "
                 .. globals.cursor_pred.line
             vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
-            globals.previous_win_id = vim.api.nvim_open_win(buf, false, {
+            globals.preview_win_id = vim.api.nvim_open_win(buf, false, {
                 relative = "cursor",
                 row = 1,
                 col = 0,
@@ -227,12 +227,12 @@ vim.api.nvim_create_autocmd("CursorMoved", {
     group = prev_win_augroup,
     pattern = "*",
     callback = function()
-        if globals.previous_win_id < 0 then
+        if globals.preview_win_id < 0 then
             return
         end
-        if globals.action_counter < 1 and vim.api.nvim_win_is_valid(globals.previous_win_id) then
+        if globals.action_counter < 1 then
             vim.api.nvim_win_set_config(
-                globals.previous_win_id,
+                globals.preview_win_id,
                 { relative = "cursor", row = 1, col = 0 }
             )
             globals.action_counter = globals.action_counter + 1
