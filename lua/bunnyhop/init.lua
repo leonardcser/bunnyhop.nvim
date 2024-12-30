@@ -75,7 +75,7 @@ local function create_prompt()
     for buf_num, buf_name in pairs(jumplist_files) do
         local changelist_csv = ""
         local changelist = vim.fn.getchangelist(buf_num)[1]
-        local changelist_start = vim.fn.max({1, #changelist - CHANGELIST_MAX_SIZE})
+        local changelist_start = vim.fn.max { 1, #changelist - CHANGELIST_MAX_SIZE }
         changelist = vim.fn.slice(changelist, changelist_start, #changelist)
         if #changelist ~= 0 then
             for indx, change_row in pairs(changelist) do
@@ -87,7 +87,12 @@ local function create_prompt()
                     .. change_row["col"]
                     .. "\n"
             end
-            changelists = changelists .. "# Change history of buffer " .. buf_name .. "\n" .. changelist_csv .. "\n"
+            changelists = changelists
+                .. "# Change history of buffer "
+                .. buf_name
+                .. "\n"
+                .. changelist_csv
+                .. "\n"
         end
     end
 
@@ -241,9 +246,13 @@ vim.api.nvim_create_autocmd("CursorMoved", {
         end
     end,
 })
-vim.api.nvim_create_autocmd("BufLeave", {group = prev_win_augroup, pattern = "*", callback = function ()
-    close_prev_win()
-end})
+vim.api.nvim_create_autocmd("BufLeave", {
+    group = prev_win_augroup,
+    pattern = "*",
+    callback = function()
+        close_prev_win()
+    end,
+})
 vim.api.nvim_create_autocmd("InsertEnter", {
     group = prev_win_augroup,
     pattern = "*",
