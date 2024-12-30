@@ -147,6 +147,7 @@ local function predict()
             globals.cursor_pred.column = globals.DEFAULT_CURSOR_PRED_COLUMN
         end
 
+        -- TODO: Move callback into its own seperate function and "clip_number" outside of it(treat it as a helper function)
         -- "Hack" to get around being unable to call vim functions in a callback.
         vim.schedule(function()
             -- Clipping model prediction because it predicts out of range values often.
