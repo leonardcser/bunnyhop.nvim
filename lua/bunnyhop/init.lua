@@ -98,7 +98,6 @@ local function create_prompt()
         .. jumplist_csv
         .. changelists
 
-    print(prompt)
     return prompt
 end
 
