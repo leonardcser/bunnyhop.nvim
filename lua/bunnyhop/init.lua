@@ -229,8 +229,7 @@ vim.api.nvim_create_autocmd("CursorMoved", {
         if globals.previous_win_id < 0 then
             return
         end
-        if globals.action_counter < 1 then
-            vim.api.nvim_win_is_valid(globals.previous_win_id)
+        if globals.action_counter < 1 and vim.api.nvim_win_is_valid(globals.previous_win_id) then
             vim.api.nvim_win_set_config(
                 globals.previous_win_id,
                 { relative = "cursor", row = 1, col = 0 }
