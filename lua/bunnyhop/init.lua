@@ -241,6 +241,9 @@ vim.api.nvim_create_autocmd("CursorMoved", {
         end
     end,
 })
+vim.api.nvim_create_autocmd("BufLeave", {group = prev_win_augroup, pattern = "*", callback = function ()
+    close_prev_win()
+end})
 vim.api.nvim_create_autocmd("InsertEnter", {
     group = prev_win_augroup,
     pattern = "*",
