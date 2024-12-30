@@ -154,6 +154,11 @@ local function predict()
 
         -- TODO: Move callback into its own seperate function and "clip_number" outside of it(treat it as a helper function)
         -- "Hack" to get around being unable to call vim functions in a callback.
+        -- TODO: Fix issue where the preview window is displayed in insert mode. Reproduction steps:
+        -- 1. startup a fresh neovim instance.
+        -- 2. Perform Normal Mode -> Insert Mode -> Normal Mode -> Insert Mode fast.
+        -- 3. Wait for the request to come.
+        -- 4. You should now see a preview window in Insert Mode.
         vim.schedule(function()
             -- Clipping model prediction because it predicts out of range values often.
             local function clip_number(num, min, max)
