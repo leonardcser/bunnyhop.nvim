@@ -43,7 +43,8 @@ local function create_prompt()
     -- col -> column
     local JUMPLIST_COLUMNS = { "index", "line_num", "column", "buffer_name" }
     local jumplist = vim.fn.getjumplist()[1]
-    local csv_jumplist = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
+    local jumplist_csv = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
+    local jumplist_files = {}
 
     -- TODO: Figure out how neovim stores all the buffer numbers so that it can jump to between them and not get a "bufnr was not found" error
     for indx, jump_row in pairs(jumplist) do
@@ -52,7 +53,7 @@ local function create_prompt()
             buf_name = vim.api.nvim_buf_get_name(jump_row["bufnr"])
         end
         if buf_name:match(".git") == nil then
-            csv_jumplist = csv_jumplist
+            jumplist_csv = jumplist_csv
                 .. indx
                 .. ","
                 .. jump_row["lnum"]
@@ -62,15 +63,39 @@ local function create_prompt()
                 .. buf_name
                 .. "\n"
         end
+
+        if jumplist_files[jump_row["bufnr"]] == nil and #buf_name ~= 0 then
+            jumplist_files[jump_row["bufnr"]] = buf_name
+        end
+    end
+
+    local CHANGELIST_COLUMNS = { "index", "line_num", "column" }
+    local CHANGELIST_MAX_SIZE = 20
+    local changelists = ""
+    for buf_num, buf_name in pairs(jumplist_files) do
+        local changelist_csv = ""
+        local changelist = vim.fn.getchangelist(buf_num)[1]
+        local changelist_start = vim.fn.max({1, #changelist - CHANGELIST_MAX_SIZE})
+        for indx, change_row in pairs(vim.fn.slice(changelist, changelist_start, #changelist)) do
+            changelist_csv = changelist_csv
+                .. indx
+                .. ","
+                .. change_row["lnum"]
+                .. ","
+                .. change_row["col"]
+                .. "\n"
+        end
+        changelists = changelists .. "# Change history of buffer " .. buf_name .. "\n" .. changelist_csv .. "\n"
     end
 
     local prompt = "Predict next cursor position based on the following information.\n"
         .. 'ONLY output the row and column of the cursor in the format [line_num, column, "buffer_name"].\n'
-        .. "DO NOT HALLUCINATE!\n"
+        .. "DO NOT HALLUCINATE PLEEEEEEEESE!\n" -- for the memes
         .. "# History of Cursor Jumps\n"
-        .. csv_jumplist
-        .. vim.api.nvim_exec2("changes", {output = true}).output
+        .. jumplist_csv
+        .. changelists
 
+    print(prompt)
     return prompt
 end
 
