@@ -109,9 +109,6 @@ local function create_prompt()
     return prompt
 end
 
--- TODO: Move the clipping of predicted number to predict()
--- as that is where all the verification/correction of predicted data happens.
--- Clipping model prediction because it predicts out of range values often.
 local function clip_number(num, min, max)
     if num < min then
         return min
@@ -133,6 +130,7 @@ local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pre
         cursor_pred_line,
         true
     )[1]
+    print(pred_line_content)
     pred_line_content = pred_line_content:gsub("^%s+", "")
     cursor_pred_column = clip_number(cursor_pred_column, 1, #pred_line_content)
 
