@@ -127,8 +127,6 @@ local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pre
         vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
         return
     end
-    cursor_pred_line =
-        clip_number(cursor_pred_line, 1, vim.api.nvim_buf_line_count(buf_num))
     local pred_line_content = vim.api.nvim_buf_get_lines(
         buf_num,
         cursor_pred_line - 1,
@@ -136,16 +134,13 @@ local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pre
         true
     )[1]
     pred_line_content = pred_line_content:gsub("^%s+", "")
-    cursor_pred_column =
-        clip_number(cursor_pred_column, 1, #pred_line_content)
+    cursor_pred_column = clip_number(cursor_pred_column, 1, #pred_line_content)
 
     -- Opens preview window.
     -- Closing the existing preview window if it exist to make space for the newly created window.
     close_preview_win()
     local buf = vim.api.nvim_create_buf(false, true)
-    local prev_win_title = vim.fs.basename(cursor_pred_file)
-        .. " : "
-        .. cursor_pred_line
+    local prev_win_title = vim.fs.basename(cursor_pred_file) .. " : " .. cursor_pred_line
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
     globals.preview_win_id = vim.api.nvim_open_win(buf, false, {
         relative = "cursor",
@@ -197,29 +192,48 @@ local function predict()
         end
 
         local response = vim.json.decode(command_result.stdout)
-        local err, pred = pcall(vim.json.decode, response.choices[1].message.content)
-        if err == false then
-            cursor_pred_file = pred[3]
-            if vim.fn.filereadable(cursor_pred_file) == 0 then
-                cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
-            end
-            cursor_pred_line = pred[1]
-            if type(cursor_pred_line) ~= "number" then
-                cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
-            end
-            cursor_pred_column = pred[2]
-            if type(cursor_pred_column) ~= "number" then
-                cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
-            end
-        end
-
+        local success, pred = pcall(vim.json.decode, response.choices[1].message.content)
         -- TODO: Fix issue where the preview window is displayed in insert mode. Reproduction steps:
         -- 1. startup a fresh neovim instance.
         -- 2. Perform Normal Mode -> Insert Mode -> Normal Mode -> Insert Mode fast.
         -- 3. Wait for the request to come.
         -- 4. You should now see a preview window in Insert Mode.
         -- "Hack" to get around being unable to call vim functions in a callback.
-        vim.schedule(function () open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file) end)
+        vim.schedule(function()
+            if success == true then
+                cursor_pred_file = pred[3]
+                if vim.fn.filereadable(cursor_pred_file) == 0 then
+                    cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
+                end
+                local pred_buf_num = vim.fn.bufnr(cursor_pred_file, true)
+                cursor_pred_line = pred[1]
+                if type(cursor_pred_line) ~= "number" then
+                    cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
+                else
+                    cursor_pred_line = clip_number(
+                        cursor_pred_line,
+                        1,
+                        vim.api.nvim_buf_line_count(pred_buf_num)
+                    )
+                end
+                cursor_pred_column = pred[2]
+                if type(cursor_pred_column) ~= "number" then
+                    cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
+                else
+                    local pred_line_content = vim.api.nvim_buf_get_lines(
+                        pred_buf_num,
+                        cursor_pred_line - 1,
+                        cursor_pred_line,
+                        true
+                    )[1]
+                    pred_line_content = pred_line_content:gsub("^%s+", "")
+                    cursor_pred_column =
+                        clip_number(cursor_pred_column, 1, #pred_line_content)
+                end
+            end
+
+            open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file)
+        end)
     end)
 end
 
