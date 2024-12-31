@@ -13,6 +13,7 @@ M.config = {
 local globals = {
     DEFAULT_PREVIOUS_WIN_ID = -1,
     DEFAULT_ACTION_COUNTER = 0,
+    -- TODO: Increate DEFAULT_CURSOR_PRED_LINE/COLUMN to 1
     DEFAULT_CURSOR_PRED_LINE = 0,
     DEFAULT_CURSOR_PRED_COLUMN = 0,
     DEFAULT_CURSOR_PRED_FILE = "",
@@ -35,6 +36,8 @@ local function close_preview_win()
     globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 end
 
+-- TODO: Figure out why Neovim's jumplist column value can be 0,
+-- and figure out a way to deal with that.
 local function create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
@@ -106,6 +109,8 @@ local function create_prompt()
     return prompt
 end
 
+-- TODO: Move the clipping of predicted number to predict()
+-- as that is where all the verification/correction of predicted data happens.
 -- Clipping model prediction because it predicts out of range values often.
 local function clip_number(num, min, max)
     if num < min then
@@ -116,31 +121,31 @@ local function clip_number(num, min, max)
     return num
 end
 
-local function open_preview_win()
-    local buf_num = vim.fn.bufnr(globals.cursor_pred.file)
+local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file)
+    local buf_num = vim.fn.bufnr(cursor_pred_file)
     if vim.fn.bufexists(buf_num) == 0 then
         vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
         return
     end
-    globals.cursor_pred.line =
-        clip_number(globals.cursor_pred.line, 1, vim.api.nvim_buf_line_count(buf_num))
+    cursor_pred_line =
+        clip_number(cursor_pred_line, 1, vim.api.nvim_buf_line_count(buf_num))
     local pred_line_content = vim.api.nvim_buf_get_lines(
         buf_num,
-        globals.cursor_pred.line - 1,
-        globals.cursor_pred.line,
+        cursor_pred_line - 1,
+        cursor_pred_line,
         true
     )[1]
     pred_line_content = pred_line_content:gsub("^%s+", "")
-    globals.cursor_pred.column =
-        clip_number(globals.cursor_pred.column, 1, #pred_line_content)
+    cursor_pred_column =
+        clip_number(cursor_pred_column, 1, #pred_line_content)
 
     -- Opens preview window.
     -- Closing the existing preview window if it exist to make space for the newly created window.
     close_preview_win()
     local buf = vim.api.nvim_create_buf(false, true)
-    local prev_win_title = vim.fs.basename(globals.cursor_pred.file)
+    local prev_win_title = vim.fs.basename(cursor_pred_file)
         .. " : "
-        .. globals.cursor_pred.line
+        .. cursor_pred_line
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
     globals.preview_win_id = vim.api.nvim_open_win(buf, false, {
         relative = "cursor",
@@ -183,6 +188,9 @@ local function predict()
         request_body,
         hf_url,
     }, {}, function(command_result)
+        local cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
+        local cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
+        local cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
         if command_result.code ~= 0 then
             vim.notify(command_result.stderr, vim.log.levels.ERROR)
             return
@@ -191,22 +199,22 @@ local function predict()
         local response = vim.json.decode(command_result.stdout)
         local err, pred = pcall(vim.json.decode, response.choices[1].message.content)
         if err then
-            globals.cursor_pred.file = globals.DEFAULT_CURSOR_PRED_FILE
-            globals.cursor_pred.line = globals.DEFAULT_CURSOR_PRED_LINE
-            globals.cursor_pred.column = globals.DEFAULT_CURSOR_PRED_COLUMN
+            cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
+            cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
+            cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
         end
 
-        globals.cursor_pred.file = pred[3]
-        if vim.fn.filereadable(globals.cursor_pred.file) == 0 then
-            globals.cursor_pred.file = globals.DEFAULT_CURSOR_PRED_FILE
+        cursor_pred_file = pred[3]
+        if vim.fn.filereadable(cursor_pred_file) == 0 then
+            cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
         end
-        globals.cursor_pred.line = pred[1]
-        if type(globals.cursor_pred.line) ~= "number" then
-            globals.cursor_pred.line = globals.DEFAULT_CURSOR_PRED_LINE
+        cursor_pred_line = pred[1]
+        if type(cursor_pred_line) ~= "number" then
+            cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
         end
-        globals.cursor_pred.column = pred[2]
-        if type(globals.cursor_pred.column) ~= "number" then
-            globals.cursor_pred.column = globals.DEFAULT_CURSOR_PRED_COLUMN
+        cursor_pred_column = pred[2]
+        if type(cursor_pred_column) ~= "number" then
+            cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
         end
 
         -- TODO: Fix issue where the preview window is displayed in insert mode. Reproduction steps:
@@ -214,9 +222,8 @@ local function predict()
         -- 2. Perform Normal Mode -> Insert Mode -> Normal Mode -> Insert Mode fast.
         -- 3. Wait for the request to come.
         -- 4. You should now see a preview window in Insert Mode.
-        -- TODO: Remove cursor_pred.* variables from globals table, pass them into the function insthead
         -- "Hack" to get around being unable to call vim functions in a callback.
-        vim.schedule(open_preview_win)
+        vim.schedule(function () open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file) end)
     end)
 end
 
