@@ -25,7 +25,7 @@ globals.cursor_pred = {
 globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 globals.action_counter = globals.DEFAULT_ACTION_COUNTER
 
-local function close_prev_win()
+local function close_preview_win()
     if globals.preview_win_id < 0 then
         return
     end
@@ -116,7 +116,7 @@ local function clip_number(num, min, max)
     return num
 end
 
-local function open_prev_win()
+local function open_preview_win()
     local buf_num = vim.fn.bufnr(globals.cursor_pred.file)
     if vim.fn.bufexists(buf_num) == 0 then
         vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
@@ -136,7 +136,7 @@ local function open_prev_win()
 
     -- Opens preview window.
     -- Closing the existing preview window if it exist to make space for the newly created window.
-    close_prev_win()
+    close_preview_win()
     local buf = vim.api.nvim_create_buf(false, true)
     local prev_win_title = vim.fs.basename(globals.cursor_pred.file)
         .. " : "
@@ -216,7 +216,7 @@ local function predict()
         -- 4. You should now see a preview window in Insert Mode.
         -- TODO: Remove cursor_pred.* variables from globals table, pass them into the function insthead
         -- "Hack" to get around being unable to call vim functions in a callback.
-        vim.schedule(open_prev_win)
+        vim.schedule(open_preview_win)
     end)
 end
 
@@ -248,7 +248,7 @@ vim.api.nvim_create_autocmd("CursorMoved", {
             )
             globals.action_counter = globals.action_counter + 1
         else
-            close_prev_win()
+            close_preview_win()
         end
     end,
 })
@@ -256,13 +256,13 @@ vim.api.nvim_create_autocmd("BufLeave", {
     group = prev_win_augroup,
     pattern = "*",
     callback = function()
-        close_prev_win()
+        close_preview_win()
     end,
 })
 vim.api.nvim_create_autocmd("InsertEnter", {
     group = prev_win_augroup,
     pattern = "*",
-    callback = close_prev_win,
+    callback = close_preview_win,
 })
 
 ---Hops to the predicted cursor position.
@@ -280,7 +280,7 @@ function M.hop()
         0,
         { globals.cursor_pred.line, globals.cursor_pred.column - 1 }
     )
-    close_prev_win()
+    close_preview_win()
 end
 
 ---Setup function
