@@ -209,13 +209,13 @@ local function predict()
             globals.cursor_pred.column = globals.DEFAULT_CURSOR_PRED_COLUMN
         end
 
-        -- "Hack" to get around being unable to call vim functions in a callback.
         -- TODO: Fix issue where the preview window is displayed in insert mode. Reproduction steps:
         -- 1. startup a fresh neovim instance.
         -- 2. Perform Normal Mode -> Insert Mode -> Normal Mode -> Insert Mode fast.
         -- 3. Wait for the request to come.
         -- 4. You should now see a preview window in Insert Mode.
         -- TODO: Remove cursor_pred.* variables from globals table, pass them into the function insthead
+        -- "Hack" to get around being unable to call vim functions in a callback.
         vim.schedule(open_prev_win)
     end)
 end
