@@ -187,11 +187,6 @@ local function predict()
 
         local response = vim.json.decode(command_result.stdout)
         local success, pred = pcall(vim.json.decode, response.choices[1].message.content)
-        -- TODO: Fix issue where the preview window is displayed in insert mode. Reproduction steps:
-        -- 1. startup a fresh neovim instance.
-        -- 2. Perform Normal Mode -> Insert Mode -> Normal Mode -> Insert Mode fast.
-        -- 3. Wait for the request to come.
-        -- 4. You should now see a preview window in Insert Mode.
         -- "Hack" to get around being unable to call vim functions in a callback.
         vim.schedule(function()
             if success == true then
@@ -225,7 +220,10 @@ local function predict()
             globals.hop_args.cursor_pred_column = cursor_pred_column
             globals.hop_args.cursor_pred_file = cursor_pred_file
 
-            open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file)
+            -- Makes sure to only display the preview mode when in normal mode
+            if vim.api.nvim_get_mode().mode == "n" then
+                open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file)
+            end
         end)
     end)
 end
