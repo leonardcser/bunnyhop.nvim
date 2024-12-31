@@ -224,11 +224,15 @@ local function predict()
     end)
 end
 
--- TODO: Make sure this is called only in code file types(mabye allow this to be configurable)
 vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
     pattern = "i:n",
-    callback = predict,
+    callback = function ()
+        local current_win_config = vim.api.nvim_win_get_config(0)
+        if current_win_config.relative == "" then
+            predict()
+        end
+    end,
 })
 
 local prev_win_augroup = vim.api.nvim_create_augroup("UpdateHopWindow", { clear = true })
