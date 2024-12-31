@@ -109,15 +109,6 @@ local function create_prompt()
     return prompt
 end
 
-local function clip_number(num, min, max)
-    if num < min then
-        return min
-    elseif num > max then
-        return max
-    end
-    return num
-end
-
 local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file)
     local buf_num = vim.fn.bufnr(cursor_pred_file)
     if vim.fn.bufexists(buf_num) == 0 then
@@ -159,6 +150,15 @@ local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pre
         border = "single",
         title = prev_win_title,
     })
+end
+
+local function clip_number(num, min, max)
+    if num < min then
+        return min
+    elseif num > max then
+        return max
+    end
+    return num
 end
 
 local function predict()
