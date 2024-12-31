@@ -109,19 +109,17 @@ local function create_prompt()
     return prompt
 end
 
+local function buf_get_line(buf_num, line_num)
+    return vim.api.nvim_buf_get_lines(buf_num, line_num - 1, line_num, true)[1]
+end
+
 local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file)
     local buf_num = vim.fn.bufnr(cursor_pred_file)
     if vim.fn.bufexists(buf_num) == 0 then
         vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
         return
     end
-    local pred_line_content = vim.api.nvim_buf_get_lines(
-        buf_num,
-        cursor_pred_line - 1,
-        cursor_pred_line,
-        true
-    )[1]
-    print(pred_line_content)
+    local pred_line_content = buf_get_line(buf_num, cursor_pred_line)
     pred_line_content = pred_line_content:gsub("^%s+", "")
     cursor_pred_column = clip_number(cursor_pred_column, 1, #pred_line_content)
 
@@ -218,13 +216,8 @@ local function predict()
                 if type(cursor_pred_column) ~= "number" then
                     cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
                 else
-                    local pred_line_content = vim.api.nvim_buf_get_lines(
-                        pred_buf_num,
-                        cursor_pred_line - 1,
-                        cursor_pred_line,
-                        true
-                    )[1]
-                    pred_line_content = pred_line_content:gsub("^%s+", "")
+                    local pred_line_content =
+                        buf_get_line(pred_buf_num, cursor_pred_line):gsub("^%s+", "")
                     cursor_pred_column =
                         clip_number(cursor_pred_column, 1, #pred_line_content)
                 end
