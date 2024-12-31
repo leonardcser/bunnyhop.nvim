@@ -121,7 +121,6 @@ local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pre
     end
     local pred_line_content = buf_get_line(buf_num, cursor_pred_line)
     pred_line_content = pred_line_content:gsub("^%s+", "")
-    cursor_pred_column = clip_number(cursor_pred_column, 1, #pred_line_content)
 
     -- Opens preview window.
     -- Closing the existing preview window if it exist to make space for the newly created window.
