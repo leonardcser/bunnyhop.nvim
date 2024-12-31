@@ -159,6 +159,7 @@ local function predict()
         -- 2. Perform Normal Mode -> Insert Mode -> Normal Mode -> Insert Mode fast.
         -- 3. Wait for the request to come.
         -- 4. You should now see a preview window in Insert Mode.
+        -- TODO: Remove cursor_pred.* variables from globals table, pass them into the function insthead
         vim.schedule(function()
             -- Clipping model prediction because it predicts out of range values often.
             local function clip_number(num, min, max)
