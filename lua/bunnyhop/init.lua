@@ -198,23 +198,19 @@ local function predict()
 
         local response = vim.json.decode(command_result.stdout)
         local err, pred = pcall(vim.json.decode, response.choices[1].message.content)
-        if err then
-            cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
-            cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
-            cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
-        end
-
-        cursor_pred_file = pred[3]
-        if vim.fn.filereadable(cursor_pred_file) == 0 then
-            cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
-        end
-        cursor_pred_line = pred[1]
-        if type(cursor_pred_line) ~= "number" then
-            cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
-        end
-        cursor_pred_column = pred[2]
-        if type(cursor_pred_column) ~= "number" then
-            cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
+        if err == false then
+            cursor_pred_file = pred[3]
+            if vim.fn.filereadable(cursor_pred_file) == 0 then
+                cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
+            end
+            cursor_pred_line = pred[1]
+            if type(cursor_pred_line) ~= "number" then
+                cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
+            end
+            cursor_pred_column = pred[2]
+            if type(cursor_pred_column) ~= "number" then
+                cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
+            end
         end
 
         -- TODO: Fix issue where the preview window is displayed in insert mode. Reproduction steps:
