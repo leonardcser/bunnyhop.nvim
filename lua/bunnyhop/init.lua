@@ -106,6 +106,63 @@ local function create_prompt()
     return prompt
 end
 
+-- Clipping model prediction because it predicts out of range values often.
+local function clip_number(num, min, max)
+    if num < min then
+        return min
+    elseif num > max then
+        return max
+    end
+    return num
+end
+
+local function open_prev_win()
+    local buf_num = vim.fn.bufnr(globals.cursor_pred.file)
+    if vim.fn.bufexists(buf_num) == 0 then
+        vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
+        return
+    end
+    globals.cursor_pred.line =
+        clip_number(globals.cursor_pred.line, 1, vim.api.nvim_buf_line_count(buf_num))
+    local pred_line_content = vim.api.nvim_buf_get_lines(
+        buf_num,
+        globals.cursor_pred.line - 1,
+        globals.cursor_pred.line,
+        true
+    )[1]
+    pred_line_content = pred_line_content:gsub("^%s+", "")
+    globals.cursor_pred.column =
+        clip_number(globals.cursor_pred.column, 1, #pred_line_content)
+
+    -- Opens preview window.
+    -- Closing the existing preview window if it exist to make space for the newly created window.
+    close_prev_win()
+    local buf = vim.api.nvim_create_buf(false, true)
+    local prev_win_title = vim.fs.basename(globals.cursor_pred.file)
+        .. " : "
+        .. globals.cursor_pred.line
+    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
+    globals.preview_win_id = vim.api.nvim_open_win(buf, false, {
+        relative = "cursor",
+        row = 1,
+        col = 0,
+        width = vim.fn.max {
+            1,
+            vim.fn.min {
+                M.config.max_prev_width,
+                vim.fn.max {
+                    #pred_line_content,
+                    #prev_win_title,
+                },
+            },
+        },
+        height = 1,
+        style = "minimal",
+        border = "single",
+        title = prev_win_title,
+    })
+end
+
 local function predict()
     local hf_url =
         "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct/v1/chat/completions"
@@ -152,7 +209,6 @@ local function predict()
             globals.cursor_pred.column = globals.DEFAULT_CURSOR_PRED_COLUMN
         end
 
-        -- TODO: Move callback into its own seperate function and "clip_number" outside of it(treat it as a helper function)
         -- "Hack" to get around being unable to call vim functions in a callback.
         -- TODO: Fix issue where the preview window is displayed in insert mode. Reproduction steps:
         -- 1. startup a fresh neovim instance.
@@ -160,75 +216,14 @@ local function predict()
         -- 3. Wait for the request to come.
         -- 4. You should now see a preview window in Insert Mode.
         -- TODO: Remove cursor_pred.* variables from globals table, pass them into the function insthead
-        vim.schedule(function()
-            -- Clipping model prediction because it predicts out of range values often.
-            local function clip_number(num, min, max)
-                if num < min then
-                    return min
-                elseif num > max then
-                    return max
-                end
-                return num
-            end
-
-            local buf_num = vim.fn.bufnr(globals.cursor_pred.file)
-            if vim.fn.bufexists(buf_num) == 0 then
-                vim.notify(
-                    "Buffer number: " .. buf_num .. " doesn't exist",
-                    vim.log.levels.WARN
-                )
-                return
-            end
-            globals.cursor_pred.line = clip_number(
-                globals.cursor_pred.line,
-                1,
-                vim.api.nvim_buf_line_count(buf_num)
-            )
-            local pred_line_content = vim.api.nvim_buf_get_lines(
-                buf_num,
-                globals.cursor_pred.line - 1,
-                globals.cursor_pred.line,
-                true
-            )[1]
-            pred_line_content = pred_line_content:gsub("^%s+", "")
-            globals.cursor_pred.column =
-                clip_number(globals.cursor_pred.column, 1, #pred_line_content)
-
-            -- Opens preview window.
-            -- Closing the existing preview window if it exist to make space for the newly created window.
-            close_prev_win()
-            local buf = vim.api.nvim_create_buf(false, true)
-            local prev_win_title = vim.fs.basename(globals.cursor_pred.file)
-                .. " : "
-                .. globals.cursor_pred.line
-            vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
-            globals.preview_win_id = vim.api.nvim_open_win(buf, false, {
-                relative = "cursor",
-                row = 1,
-                col = 0,
-                width = vim.fn.max {
-                    1,
-                    vim.fn.min {
-                        M.config.max_prev_width,
-                        vim.fn.max {
-                            #pred_line_content,
-                            #prev_win_title,
-                        },
-                    },
-                },
-                height = 1,
-                style = "minimal",
-                border = "single",
-                title = prev_win_title,
-            })
-        end)
+        vim.schedule(open_prev_win)
     end)
 end
 
 vim.api.nvim_create_autocmd({ "ModeChanged" }, {
     group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
     pattern = "i:n",
-    callback = function ()
+    callback = function()
         local current_win_config = vim.api.nvim_win_get_config(0)
         if current_win_config.relative == "" then
             predict()
