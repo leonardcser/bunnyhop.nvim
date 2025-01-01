@@ -33,8 +33,6 @@ local function close_preview_win()
     globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 end
 
--- TODO: Figure out why Neovim's jumplist column value can be 0,
--- and figure out a way to deal with that.
 local function create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
@@ -46,6 +44,7 @@ local function create_prompt()
     local jumplist_csv = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
     local jumplist_files = {}
 
+    -- TODO: Figure out how neovim stores all the buffer numbers so that it can jump to between them and not get a "bufnr was not found" error
     for indx, jump_row in pairs(jumplist) do
         local buf_name = ""
         if vim.fn.bufexists(jump_row["bufnr"]) == 1 then
