@@ -1,5 +1,3 @@
--- TODO: make this plugin not activate on buffers that are not code related.
---
 local M = {}
 
 --- Default config, gets overriden with user config options as needed.
