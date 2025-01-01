@@ -46,7 +46,6 @@ local function create_prompt()
     local jumplist_csv = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
     local jumplist_files = {}
 
-    -- TODO: Figure out how neovim stores all the buffer numbers so that it can jump to between them and not get a "bufnr was not found" error
     for indx, jump_row in pairs(jumplist) do
         local buf_name = ""
         if vim.fn.bufexists(jump_row["bufnr"]) == 1 then
