@@ -45,12 +45,13 @@ local function create_prompt()
     local jumplist_files = {}
 
     for indx, jump_row in pairs(jumplist) do
+        local buf_num = jump_row["bufnr"]
         local buf_name = ""
-        if vim.fn.bufexists(jump_row["bufnr"]) == 1 then
-            buf_name = vim.api.nvim_buf_get_name(jump_row["bufnr"])
+        if vim.fn.bufexists(buf_num) == 1 then
+            buf_name = vim.api.nvim_buf_get_name(buf_num)
             if buf_name:match(".git") == nil then
-                if jumplist_files[jump_row["bufnr"]] == nil then
-                    jumplist_files[jump_row["bufnr"]] = buf_name
+                if jumplist_files[buf_num] == nil then
+                    jumplist_files[buf_num] = buf_name
                 end
                 jumplist_csv = jumplist_csv
                     .. indx
