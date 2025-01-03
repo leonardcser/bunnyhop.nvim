@@ -1,8 +1,10 @@
 local M = {}
 
 --- Default config, gets overriden with user config options as needed.
----@class bhop.opts
+---@class bhop.config
 M.config = {
+    ---@type "hugging_face"
+    provider = "hugging_face",
     ---@type string
     api_key = "",
     ---@type number
@@ -46,9 +48,8 @@ local function create_prompt()
 
     for indx, jump_row in pairs(jumplist) do
         local buf_num = jump_row["bufnr"]
-        local buf_name = ""
         if vim.fn.bufexists(buf_num) == 1 then
-            buf_name = vim.api.nvim_buf_get_name(buf_num)
+            local buf_name = vim.api.nvim_buf_get_name(buf_num)
             if buf_name:match(".git") == nil then
                 if jumplist_files[buf_num] == nil then
                     jumplist_files[buf_num] = buf_name
@@ -88,6 +89,8 @@ local function create_prompt()
                 .. "# Change history of buffer "
                 .. buf_name
                 .. "\n"
+                .. table.concat(CHANGELIST_COLUMNS, ",")
+                .. "\n"
                 .. changelist_csv
                 .. "\n"
         end
@@ -107,7 +110,7 @@ local function buf_get_line(buf_num, line_num)
     return vim.api.nvim_buf_get_lines(buf_num, line_num - 1, line_num, true)[1]
 end
 
-local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file)
+local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file) --luacheck: no unused args
     local buf_num = vim.fn.bufnr(cursor_pred_file)
     if vim.fn.bufexists(buf_num) == 0 then
         vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
@@ -153,74 +156,69 @@ local function clip_number(num, min, max)
 end
 
 local function predict()
-    local hf_url =
-        "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct/v1/chat/completions"
-    local prompt = create_prompt()
-    local request_body = vim.json.encode {
-        model = "Qwen/Qwen2.5-Coder-32B-Instruct",
-        messages = { { role = "user", content = prompt } },
-        max_tokens = 30,
-        stream = false,
-    }
-    vim.system({
-        "curl",
-        "-H",
-        "Authorization: Bearer " .. M.config.api_key,
-        "-H",
-        "Content-Type: application/json",
-        "-d",
-        request_body,
-        hf_url,
-    }, {}, function(command_result)
-        local cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
-        local cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
-        local cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
-        if command_result.code ~= 0 then
-            vim.notify(command_result.stderr, vim.log.levels.ERROR)
-            return
-        end
+    local provider = require("bunnyhop.providers." .. M.config.provider)
+    provider.complete(
+        create_prompt(),
+        "Qwen/Qwen2.5-Coder-32B-Instruct",
+        M.config,
+        function(command_result)
+            local cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
+            local cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
+            local cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
+            if command_result.code ~= 0 then
+                vim.notify(command_result.stderr, vim.log.levels.ERROR)
+                return
+            end
 
-        local response = vim.json.decode(command_result.stdout)
-        local success, pred = pcall(vim.json.decode, response.choices[1].message.content)
-        -- "Hack" to get around being unable to call vim functions in a callback.
-        vim.schedule(function()
-            if success == true then
-                cursor_pred_file = pred[3]
-                if vim.fn.filereadable(cursor_pred_file) == 0 then
-                    cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
+            local response = vim.json.decode(command_result.stdout)
+            local success, pred =
+                pcall(vim.json.decode, response.choices[1].message.content)
+            -- "Hack" to get around being unable to call vim functions in a callback.
+            vim.schedule(function()
+                if success == true then
+                    cursor_pred_file = pred[3]
+                    if vim.fn.filereadable(cursor_pred_file) == 0 then
+                        cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
+                    end
+                    local pred_buf_num = vim.fn.bufnr(cursor_pred_file, true)
+
+                    cursor_pred_line = pred[1]
+                    if type(cursor_pred_line) ~= "number" then
+                        cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
+                    else
+                        cursor_pred_line = clip_number(
+                            cursor_pred_line,
+                            1,
+                            vim.api.nvim_buf_line_count(pred_buf_num)
+                        )
+                    end
+
+                    cursor_pred_column = pred[2]
+                    if type(cursor_pred_column) ~= "number" then
+                        cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
+                    else
+                        local pred_line_content =
+                            buf_get_line(pred_buf_num, cursor_pred_line):gsub("^%s+", "")
+                        cursor_pred_column =
+                            clip_number(cursor_pred_column, 1, #pred_line_content)
+                    end
                 end
-                local pred_buf_num = vim.fn.bufnr(cursor_pred_file, true)
-                cursor_pred_line = pred[1]
-                if type(cursor_pred_line) ~= "number" then
-                    cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
-                else
-                    cursor_pred_line = clip_number(
+
+                globals.hop_args.cursor_pred_line = cursor_pred_line
+                globals.hop_args.cursor_pred_column = cursor_pred_column
+                globals.hop_args.cursor_pred_file = cursor_pred_file
+
+                -- Makes sure to only display the preview mode when in normal mode
+                if vim.api.nvim_get_mode().mode == "n" then
+                    open_preview_win(
                         cursor_pred_line,
-                        1,
-                        vim.api.nvim_buf_line_count(pred_buf_num)
+                        cursor_pred_column,
+                        cursor_pred_file
                     )
                 end
-                cursor_pred_column = pred[2]
-                if type(cursor_pred_column) ~= "number" then
-                    cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
-                else
-                    local pred_line_content =
-                        buf_get_line(pred_buf_num, cursor_pred_line):gsub("^%s+", "")
-                    cursor_pred_column =
-                        clip_number(cursor_pred_column, 1, #pred_line_content)
-                end
-            end
-
-            globals.hop_args.cursor_pred_line = cursor_pred_line
-            globals.hop_args.cursor_pred_column = cursor_pred_column
-            globals.hop_args.cursor_pred_file = cursor_pred_file
-
-            -- Makes sure to only display the preview mode when in normal mode
-            if vim.api.nvim_get_mode().mode == "n" then
-                open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file)
-            end
-        end)
-    end)
+            end)
+        end
+    )
 end
 
 vim.api.nvim_create_autocmd({ "ModeChanged" }, {
@@ -290,7 +288,7 @@ function M.hop()
 end
 
 ---Setup function
----@param opts? bhop.opts
+---@param opts? bhop.config
 function M.setup(opts)
     ---@diagnostic disable-next-line: param-type-mismatch
     for opt_key, opt_val in pairs(opts) do
