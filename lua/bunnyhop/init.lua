@@ -89,6 +89,8 @@ local function create_prompt()
                 .. "# Change history of buffer "
                 .. buf_name
                 .. "\n"
+                .. table.concat(CHANGELIST_COLUMNS, ",")
+                .. "\n"
                 .. changelist_csv
                 .. "\n"
         end
