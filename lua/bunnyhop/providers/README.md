@@ -12,8 +12,9 @@ The spec currently has three different functions that need to be implemented.
 
 ```lua
 ---Gets the available models to use.
+---@param callback function Function that gets called after the request is made.
 ---@return string[]
-function get_models()
+local function get_models(callback)
 end
 ```
 Example output:
@@ -25,8 +26,9 @@ Example output:
 ---Sets the given model.
 ---Model must be one of the models returned in get_models().
 ---@param model_name string
+---@param callback function Function that gets called after the request is made.
 ---@return nil
-function set_model(model_name)
+local function set_model(model_name, callback)
 end
 ```
 
@@ -34,8 +36,9 @@ end
 ```lua
 ---Completes the given prompt.
 ---@param prompt string
+---@param callback function Function that gets called after the request is made.
 ---@return string
-function complete(prompt)
+local function complete(prompt, callback)
 end
 ```
 Example output:
