@@ -3,7 +3,7 @@ local M = {}
 ---Gets the available models to use.
 ---@param callback function Function that gets called after the request is made.
 ---@return string[]
-function M.get_models(config, callback)
+function M.get_models(config, callback) --luacheck: no unused args
     callback()
     return { "Qwen/Qwen2.5-Coder-32B-Instruct" }
 end

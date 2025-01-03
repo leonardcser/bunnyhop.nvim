@@ -110,7 +110,7 @@ local function buf_get_line(buf_num, line_num)
     return vim.api.nvim_buf_get_lines(buf_num, line_num - 1, line_num, true)[1]
 end
 
-local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file)
+local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file) --luacheck: no unused args
     local buf_num = vim.fn.bufnr(cursor_pred_file)
     if vim.fn.bufexists(buf_num) == 0 then
         vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
