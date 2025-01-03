@@ -23,3 +23,6 @@ jobs:
           VALIDATE_JSCPD: false
           VALIDATE_PYTHON_BLACK: false
           FIX_MARKDOWN_PRETTIER: false
+          FIX_MARKDOWN: false
+          VALIDATE_MARKDOWN: false
+          VALIDATE_MARKDOWN_PRETTIER: false
