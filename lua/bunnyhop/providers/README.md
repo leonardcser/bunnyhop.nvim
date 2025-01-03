@@ -13,7 +13,7 @@ The spec currently has three different functions that need to be implemented.
 ```lua
 ---Gets the available models to use.
 ---@return string[]
-local function get_models()
+function get_models()
 end
 ```
 Example output:
@@ -26,7 +26,7 @@ Example output:
 ---Model must be one of the models returned in get_models().
 ---@param model_name string
 ---@return nil
-local function set_model(model_name)
+function set_model(model_name)
 end
 ```
 
@@ -35,7 +35,7 @@ end
 ---Completes the given prompt.
 ---@param prompt string
 ---@return string
-local function complete(prompt)
+function complete(prompt)
 end
 ```
 Example output:
