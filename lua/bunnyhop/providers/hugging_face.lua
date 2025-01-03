@@ -5,9 +5,8 @@ local M = {}
 ---@return string[]
 function M.get_models(config, callback)
     callback()
-    return {"Qwen/Qwen2.5-Coder-32B-Instruct"}
+    return { "Qwen/Qwen2.5-Coder-32B-Instruct" }
 end
-
 
 ---Completes the given prompt.
 ---@param prompt string Input prompt.
