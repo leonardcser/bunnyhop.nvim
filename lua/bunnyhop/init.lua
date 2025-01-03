@@ -48,9 +48,8 @@ local function create_prompt()
 
     for indx, jump_row in pairs(jumplist) do
         local buf_num = jump_row["bufnr"]
-        local buf_name = ""
         if vim.fn.bufexists(buf_num) == 1 then
-            buf_name = vim.api.nvim_buf_get_name(buf_num)
+            local buf_name = vim.api.nvim_buf_get_name(buf_num)
             if buf_name:match(".git") == nil then
                 if jumplist_files[buf_num] == nil then
                     jumplist_files[buf_num] = buf_name
@@ -180,6 +179,7 @@ local function predict()
                         cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
                     end
                     local pred_buf_num = vim.fn.bufnr(cursor_pred_file, true)
+
                     cursor_pred_line = pred[1]
                     if type(cursor_pred_line) ~= "number" then
                         cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
@@ -190,6 +190,7 @@ local function predict()
                             vim.api.nvim_buf_line_count(pred_buf_num)
                         )
                     end
+
                     cursor_pred_column = pred[2]
                     if type(cursor_pred_column) ~= "number" then
                         cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
