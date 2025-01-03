@@ -14,7 +14,7 @@ The spec currently has three different functions that need to be implemented.
 ---Gets the available models to use.
 ---@param callback function Function that gets called after the request is made.
 ---@return string[]
-local function get_models()
+local function get_models(callback)
 end
 ```
 Example output:
@@ -23,20 +23,13 @@ Example output:
 ```
 
 ```lua
----Sets the given model.
----Model must be one of the models returned in get_models().
----@param model_name string
----@return nil
-local function set_model(model_name)
-end
-```
-
-
-```lua
 ---Completes the given prompt.
----@param prompt string
----@return string
-local function complete(prompt)
+---@param prompt string Input prompt.
+---@param model string LLM model name.
+---@param config bhop.config User config. Used to get the api_key for now, mabye more things later.
+---@param callback function Function that gets called after the request is made.
+---@return nil
+function M.complete(prompt, model, config, callback)
 end
 ```
 Example output:
