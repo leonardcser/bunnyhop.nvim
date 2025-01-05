@@ -3,7 +3,7 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
 
 ## Features
 
-### When entering Normal mode, Bunnyhop predicts your next desired cursor position, provides a preview window and allows you to hop to it via your chosen keybinding.
+#### Predicts your next desired cursor position a preview window, allowing you to hop to it via your chosen keybinding.
 
 ![bunnyhop_feature_1](https://github.com/user-attachments/assets/9d9be27e-c8b7-4d02-9c64-4ba7a860f922)
 
