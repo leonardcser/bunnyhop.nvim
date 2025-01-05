@@ -1,6 +1,7 @@
 # bunnyhop.nvim
 Hop across your code at lightning speed ⚡️⚡️⚡️
 
+## Features
 
 ## Development
 
