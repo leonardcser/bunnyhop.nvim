@@ -15,7 +15,7 @@ local globals = {
     DEFAULT_ACTION_COUNTER = 0,
     DEFAULT_CURSOR_PRED_LINE = 1,
     DEFAULT_CURSOR_PRED_COLUMN = 1,
-    DEFAULT_CURSOR_PRED_FILE = "",
+    DEFAULT_CURSOR_PRED_FILE = "%",
 }
 globals.hop_args = {
     cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE,
