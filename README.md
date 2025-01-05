@@ -25,6 +25,10 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
 }
 ```
 
+## Configuration
+
+Bunnyhop is configured via the setup() function. The default configuration values can be found [here](lua/bunnyhop/init.lua).
+
 ## Development
 
 ### Run tests
