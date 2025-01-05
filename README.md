@@ -4,6 +4,24 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
 ## Features
 ![bunnyhop_feature_1](https://github.com/user-attachments/assets/9d9be27e-c8b7-4d02-9c64-4ba7a860f922)
 
+## Installation
+### [lazy.nvim](https://github.com/folke/lazy.nvim)
+```lua
+{
+    dir = "PLAZMAMA/bunnyhop.nvim",
+    lazy = false,
+    keys = {
+        {
+            "<C-h>",
+            function()
+                require("bunnyhop").hop()
+            end,
+            desc = "[H]op to predicted location.",
+        },
+    },
+    opts = { api_key = "HF_API_KEY" },
+}
+```
 
 ## Development
 
