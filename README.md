@@ -1,6 +1,5 @@
 # bunnyhop.nvim
 Hop across your code at lightning speed ⚡️⚡️⚡️
-![bunny-logo](https://github.com/PLAZMAMA/bunnyhop.nvim/tree/add-readme-essentials/media/bunnyhop-logo.png)
 
 
 ## Development
