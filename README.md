@@ -33,15 +33,18 @@ luarocks test spec/path_to_file.lua --local
 busted spec/path_to_file.lua
 ```
 
-If you see an error like `module 'busted.runner' not found`:
+## Common Errors with Local Testing
 
+> [!Note]
+> For The local testing to work you need to have Lua 5.1 set as your default version for luarocks.
+> If that's not the case you can pass `--lua-version 5.1` to all the luarocks commands above.
+
+1. If you see an error like `module 'busted.runner' not found` run the following command:
+
+This sets the correct luarocks path.
 ```bash
 eval $(luarocks path --no-bin)
 ```
-
-For this to work you need to have Lua 5.1 set as your default version for
-luarocks. If that's not the case you can pass `--lua-version 5.1` to all the
-luarocks commands above.
 
 [rockspec-format]: https://github.com/luarocks/luarocks/wiki/Rockspec-format
 [luarocks]: https://luarocks.org
