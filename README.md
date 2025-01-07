@@ -1,6 +1,10 @@
 # bunnyhop.nvim
 Hop across your code at lightning speed ⚡️⚡️⚡️
 
+> [!Note]
+> This plugin is in alpha version, expect bugs, lacking features and documentation.
+> If you found a bug, reporting it would be appriciated, while fixing it via a pull request would be greatly appriciated.
+
 ## Features
 
 #### Predicts your next desired cursor position a preview window, allowing you to hop to it via your chosen keybinding.
