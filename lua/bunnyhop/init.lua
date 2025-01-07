@@ -152,7 +152,10 @@ local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pre
 end
 
 local function clip_number(num, min, max)
-    if num < min then
+    if min > max then
+        vim.notify("min(" .. min .. ")" .. " > " .. "max(" .. max .. ")", vim.log.levels.INFO)
+        return min
+    elseif num < min then
         return min
     elseif num > max then
         return max
