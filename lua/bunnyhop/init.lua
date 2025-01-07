@@ -15,12 +15,12 @@ local globals = {
     DEFAULT_ACTION_COUNTER = 0,
     DEFAULT_CURSOR_PRED_LINE = 1,
     DEFAULT_CURSOR_PRED_COLUMN = 1,
-    DEFAULT_CURSOR_PRED_FILE = function () return vim.api.nvim_buf_get_name(0) end,
+    DEFAULT_CURSOR_PRED_FILE = "%",
 }
 globals.hop_args = {
     cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE,
     cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN,
-    cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE(),
+    cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE,
 }
 globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 globals.action_counter = globals.DEFAULT_ACTION_COUNTER
@@ -116,6 +116,11 @@ local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pre
         vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
         return
     end
+
+    if cursor_pred_file == "%" then
+        cursor_pred_file = vim.api.nvim_buf_get_name(0)
+    end
+
     local pred_line_content = buf_get_line(buf_num, cursor_pred_line)
     pred_line_content = pred_line_content:gsub("^%s+", "")
 
@@ -172,13 +177,13 @@ local function predict()
                 pcall(vim.json.decode, response.choices[1].message.content)
             -- "Hack" to get around being unable to call vim functions in a callback.
             vim.schedule(function()
-                local cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE()
+                local cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
                 local cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
                 local cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
                 if success == true then
                     cursor_pred_file = pred[3]
                     if #cursor_pred_file == 0 or vim.fn.filereadable(cursor_pred_file) == 0 then
-                        cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE()
+                        cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
                     end
                     local pred_buf_num = vim.fn.bufnr(cursor_pred_file, true)
 
