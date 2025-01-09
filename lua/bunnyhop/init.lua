@@ -50,7 +50,7 @@ local function create_prompt()
         local buf_num = jump_row["bufnr"]
         if vim.fn.bufexists(buf_num) == 1 then
             local buf_name = vim.api.nvim_buf_get_name(buf_num)
-            if buf_name:match(".git") == nil then
+            if buf_name:match(".git") == nil and buf_name:match(vim.fn.getcwd()) ~= nil then
                 if jumplist_files[buf_num] == nil then
                     jumplist_files[buf_num] = buf_name
                 end
