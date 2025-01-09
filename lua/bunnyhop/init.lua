@@ -50,7 +50,7 @@ local function create_prompt()
         local buf_num = jump_row["bufnr"]
         if vim.fn.bufexists(buf_num) == 1 then
             local buf_name = vim.api.nvim_buf_get_name(buf_num)
-            if buf_name:match(".git") == nil then
+            if buf_name:match(".git") == nil and buf_name:match(vim.fn.getcwd()) ~= nil then
                 if jumplist_files[buf_num] == nil then
                     jumplist_files[buf_num] = buf_name
                 end
@@ -160,6 +160,46 @@ local function clip_number(num, min, max)
     return num
 end
 
+local function extract_pred(llm_output)
+    -- "Hack" to get around being unable to call vim functions in a callback.
+    local success, pred_str = pcall(vim.json.decode, llm_output)
+    local pred = {
+        file = globals.DEFAULT_CURSOR_PRED_FILE,
+        line = globals.DEFAULT_CURSOR_PRED_LINE,
+        column = globals.DEFAULT_CURSOR_PRED_COLUMN
+    }
+    if success == true then
+        pred.file = pred_str[3]
+        if #pred.file == 0 or vim.fn.filereadable(pred.file) == 0 then
+            pred.file = globals.DEFAULT_CURSOR_PRED_FILE
+        end
+        local pred_buf_num = vim.fn.bufnr(pred.file, true)
+
+        pred.line = pred_str[1]
+        if type(pred.line) ~= "number" then
+            pred.line = globals.DEFAULT_CURSOR_PRED_LINE
+        else
+            pred.line = clip_number(
+                pred.line,
+                1,
+                vim.api.nvim_buf_line_count(pred_buf_num)
+            )
+        end
+
+        pred.column = pred_str[2]
+        if type(pred.column) ~= "number" then
+            pred.column = globals.DEFAULT_CURSOR_PRED_COLUMN
+        else
+            local pred_line_content =
+                buf_get_line(pred_buf_num, pred.line):gsub("^%s+", "")
+            pred.column =
+                clip_number(pred.column, 1, #pred_line_content)
+        end
+    end
+
+    return pred
+end
+
 local function predict()
     local provider = require("bunnyhop.providers." .. M.config.provider)
     provider.complete(
@@ -173,52 +213,19 @@ local function predict()
             end
 
             local response = vim.json.decode(command_result.stdout)
-            local success, pred =
-                pcall(vim.json.decode, response.choices[1].message.content)
             -- "Hack" to get around being unable to call vim functions in a callback.
             vim.schedule(function()
-                local cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
-                local cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
-                local cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
-                if success == true then
-                    cursor_pred_file = pred[3]
-                    if #cursor_pred_file == 0 or vim.fn.filereadable(cursor_pred_file) == 0 then
-                        cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE
-                    end
-                    local pred_buf_num = vim.fn.bufnr(cursor_pred_file, true)
-
-                    cursor_pred_line = pred[1]
-                    if type(cursor_pred_line) ~= "number" then
-                        cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE
-                    else
-                        cursor_pred_line = clip_number(
-                            cursor_pred_line,
-                            1,
-                            vim.api.nvim_buf_line_count(pred_buf_num)
-                        )
-                    end
-
-                    cursor_pred_column = pred[2]
-                    if type(cursor_pred_column) ~= "number" then
-                        cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN
-                    else
-                        local pred_line_content =
-                            buf_get_line(pred_buf_num, cursor_pred_line):gsub("^%s+", "")
-                        cursor_pred_column =
-                            clip_number(cursor_pred_column, 1, #pred_line_content)
-                    end
-                end
-
-                globals.hop_args.cursor_pred_line = cursor_pred_line
-                globals.hop_args.cursor_pred_column = cursor_pred_column
-                globals.hop_args.cursor_pred_file = cursor_pred_file
+                local pred = extract_pred(response.choices[1].message.content)
+                globals.hop_args.cursor_pred_line = pred.line
+                globals.hop_args.cursor_pred_column = pred.column
+                globals.hop_args.cursor_pred_file = pred.file
 
                 -- Makes sure to only display the preview mode when in normal mode
                 if vim.api.nvim_get_mode().mode == "n" then
                     open_preview_win(
-                        cursor_pred_line,
-                        cursor_pred_column,
-                        cursor_pred_file
+                        pred.line,
+                        pred.column,
+                        pred.file
                     )
                 end
             end)
