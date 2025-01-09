@@ -282,19 +282,19 @@ vim.api.nvim_create_autocmd("InsertEnter", {
 function M.hop()
     if
         globals.hop_args.cursor_pred_line == -1
-        or globals.hop_args["pred.column"] == -1
+        or globals.hop_args.cursor_pred_column == -1
     then
         return
     end
 
     -- Adds current position to the jumplist so you can <C-o> back to it if you don't like where you hopped.
     vim.cmd("normal! m'")
-    local buf_num = vim.fn.bufnr(globals.hop_args["pred.file"], true)
+    local buf_num = vim.fn.bufnr(globals.hop_args.cursor_pred_file, true)
     vim.fn.bufload(buf_num)
     vim.api.nvim_set_current_buf(buf_num)
     vim.api.nvim_win_set_cursor(
         0,
-        { globals.hop_args.cursor_pred_line, globals.hop_args["pred.column"] - 1 }
+        { globals.hop_args.cursor_pred_line, globals.hop_args.cursor_pred_column - 1 }
     )
     close_preview_win()
 end
