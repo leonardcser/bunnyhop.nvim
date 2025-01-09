@@ -17,7 +17,7 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
 
 ```lua
 {
-    dir = "PLAZMAMA/bunnyhop.nvim",
+    "PLAZMAMA/bunnyhop.nvim",
     lazy = false,
     keys = {
         {
@@ -29,7 +29,7 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
         },
     },
     opts = { api_key = "HF_API_KEY" },
-}
+},
 ```
 
 ## Configuration
