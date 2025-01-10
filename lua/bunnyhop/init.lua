@@ -314,12 +314,12 @@ function M.setup(opts)
 
     if #M.config.api_key == 0 then
         bhop_notify(
-            "API key wasn't given, please set the api_key in the opts table to an enviornment variable name.",
+            "'api_key' wasn't given, set the api_key in opts.",
             vim.log.levels.ERROR
         )
     elseif M.config.api_key:match("[a-z]+") ~= nil then
         bhop_notify(
-            "Given API key is not a name of an enviornment variable.",
+            "Given api_key is not a name of an enviornment variable.",
             vim.log.levels.ERROR
         )
     else
@@ -328,7 +328,7 @@ function M.setup(opts)
             M.config.api_key = api_key
         else
             bhop_notify(
-                "Wasn't able to get API key from the enviornment.",
+                "Enviornment variable '" .. M.config.api_key .. "' not found.",
                 vim.log.levels.ERROR
             )
         end
