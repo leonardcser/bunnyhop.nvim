@@ -13,12 +13,20 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
 
 ## Installation
 
+### Prerequisites
+
+The only provider supported currently is Hugging Face's [Serverless](https://huggingface.co/docs/api-inference/en/index).
+Hence, Hugging Face's API key is required. Learn how to set it up [here](https://huggingface.co/docs/api-inference/en/getting-started).
+Once you have you're API key, create an enviornment variable for the key, eg. `export HF_API_KEY=************`
+
 ### [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
 {
     "PLAZMAMA/bunnyhop.nvim",
-    lazy = false,
+    lazy = false, -- This plugin does not support lazy loading for now
+    -- Setting the keybinding for hopping to the predicted location.
+    -- Change it to whatever suits you.
     keys = {
         {
             "<C-h>",
@@ -28,6 +36,8 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
             desc = "[H]op to predicted location.",
         },
     },
+    -- The only options currently required is the api_key.
+    -- Set it to the enviornment variable name of your hugging face API key.
     opts = { api_key = "HF_API_KEY" },
 },
 ```
