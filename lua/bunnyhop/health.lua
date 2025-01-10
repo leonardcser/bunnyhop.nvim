@@ -17,11 +17,9 @@ M.check = function()
     }
     local ok = true
     local err_msg = "Setup is incorrect: \n"
-    local current_ok = true
-    local current_err_msg = ""
     for check_category_name, check_category in pairs(setup_checks) do
-        current_ok = true
-        current_err_msg = check_category_name .. " Error: \n"
+        local current_ok = true
+        local current_err_msg = check_category_name .. " Error: \n"
         for _, check in pairs(check_category) do
             if check.ok == false then
                 current_ok = false
