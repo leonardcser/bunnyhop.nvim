@@ -110,10 +110,15 @@ local function buf_get_line(buf_num, line_num)
     return vim.api.nvim_buf_get_lines(buf_num, line_num - 1, line_num, true)[1]
 end
 
+local function bhop_notify(msg, level, opts)
+    opts["title"] = "bunnyhop.nvim"
+    vim.notify(msg, level, opts)
+end
+
 local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file) --luacheck: no unused args
     local buf_num = vim.fn.bufnr(cursor_pred_file)
     if vim.fn.bufexists(buf_num) == 0 then
-        vim.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
+        bhop_notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
         return
     end
 
@@ -208,7 +213,7 @@ local function predict()
         M.config,
         function(command_result)
             if command_result.code ~= 0 then
-                vim.notify(command_result.stderr, vim.log.levels.ERROR)
+                bhop_notify(command_result.stderr, vim.log.levels.ERROR)
                 return
             end
 
@@ -308,13 +313,13 @@ function M.setup(opts)
     end
 
     if #M.config.api_key == 0 then
-        vim.notify(
-            "API key wasn't given, please set the api_key in the opts table to an enviornment variable name.",
+        bhop_notify(
+            "'api_key' wasn't given, set the api_key in opts.",
             vim.log.levels.ERROR
         )
     elseif M.config.api_key:match("[a-z]+") ~= nil then
-        vim.notify(
-            "Given API key is not a name of an enviornment variable.",
+        bhop_notify(
+            "Given api_key is not a name of an enviornment variable.",
             vim.log.levels.ERROR
         )
     else
@@ -322,8 +327,8 @@ function M.setup(opts)
         if api_key then
             M.config.api_key = api_key
         else
-            vim.notify(
-                "Wasn't able to get API key from the enviornment.",
+            bhop_notify(
+                "Enviornment variable '" .. M.config.api_key .. "' not found.",
                 vim.log.levels.ERROR
             )
         end
