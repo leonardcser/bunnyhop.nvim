@@ -50,7 +50,10 @@ local function create_prompt()
         local buf_num = jump_row["bufnr"]
         if vim.fn.bufexists(buf_num) == 1 then
             local buf_name = vim.api.nvim_buf_get_name(buf_num)
-            if buf_name:match(".git") == nil and buf_name:match(vim.fn.getcwd()) ~= nil then
+            if
+                buf_name:match(".git") == nil
+                and buf_name:match(vim.fn.getcwd()) ~= nil
+            then
                 if jumplist_files[buf_num] == nil then
                     jumplist_files[buf_num] = buf_name
                 end
@@ -174,7 +177,7 @@ local function extract_pred(llm_output)
     local pred = {
         file = globals.DEFAULT_CURSOR_PRED_FILE,
         line = globals.DEFAULT_CURSOR_PRED_LINE,
-        column = globals.DEFAULT_CURSOR_PRED_COLUMN
+        column = globals.DEFAULT_CURSOR_PRED_COLUMN,
     }
     if success == true then
         pred.file = pred_str[3]
@@ -188,11 +191,8 @@ local function extract_pred(llm_output)
         if type(pred.line) ~= "number" then
             pred.line = globals.DEFAULT_CURSOR_PRED_LINE
         else
-            pred.line = clip_number(
-                pred.line,
-                1,
-                vim.api.nvim_buf_line_count(pred_buf_num)
-            )
+            pred.line =
+                clip_number(pred.line, 1, vim.api.nvim_buf_line_count(pred_buf_num))
         end
 
         pred.column = pred_str[2]
@@ -201,8 +201,7 @@ local function extract_pred(llm_output)
         else
             local pred_line_content =
                 buf_get_line(pred_buf_num, pred.line):gsub("^%s+", "")
-            pred.column =
-                clip_number(pred.column, 1, #pred_line_content)
+            pred.column = clip_number(pred.column, 1, #pred_line_content)
         end
     end
 
@@ -231,11 +230,7 @@ local function predict()
 
                 -- Makes sure to only display the preview mode when in normal mode
                 if vim.api.nvim_get_mode().mode == "n" then
-                    open_preview_win(
-                        pred.line,
-                        pred.column,
-                        pred.file
-                    )
+                    open_preview_win(pred.line, pred.column, pred.file)
                 end
             end)
         end
