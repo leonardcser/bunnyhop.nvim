@@ -178,7 +178,8 @@ local function extract_pred(llm_output)
         if #pred.file == 0 or vim.fn.filereadable(pred.file) == 0 then
             pred.file = globals.DEFAULT_CURSOR_PRED_FILE
         end
-        local pred_buf_num = vim.fn.bufnr(pred.file, true)
+        local pred_buf_num = vim.fn.bufadd(pred.file)
+        vim.fn.bufload(pred_buf_num)
 
         pred.line = pred_str[1]
         if type(pred.line) ~= "number" then
