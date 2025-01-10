@@ -111,6 +111,9 @@ local function buf_get_line(buf_num, line_num)
 end
 
 local function bhop_notify(msg, level, opts)
+    if opts == nil then
+        opts = {}
+    end
     opts["title"] = "bunnyhop.nvim"
     vim.notify(msg, level, opts)
 end
