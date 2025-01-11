@@ -237,70 +237,66 @@ local function predict()
     )
 end
 
-vim.api.nvim_create_autocmd({ "ModeChanged" }, {
-    group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
-    pattern = "i:n",
-    callback = function()
-        local current_win_config = vim.api.nvim_win_get_config(0)
-        if current_win_config.relative == "" then
-            predict()
-        end
-    end,
-})
+function M.hop() end
 
-local prev_win_augroup = vim.api.nvim_create_augroup("UpdateHopWindow", { clear = true })
--- TODO: Find an autocommand event or pattern that only activates when cursor is moved inside the current buffer/in normal mode.
--- Not when switching between different files.
-vim.api.nvim_create_autocmd("CursorMoved", {
-    group = prev_win_augroup,
-    pattern = "*",
-    callback = function()
-        if globals.preview_win_id < 0 then
+local function init()
+    vim.api.nvim_create_autocmd({ "ModeChanged" }, {
+        group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
+        pattern = "i:n",
+        callback = function()
+            local current_win_config = vim.api.nvim_win_get_config(0)
+            if current_win_config.relative == "" then
+                predict()
+            end
+        end,
+    })
+    local prev_win_augroup =
+        vim.api.nvim_create_augroup("UpdateHopWindow", { clear = true })
+    -- TODO: Find an autocommand event or pattern that only activates when cursor is moved inside the current buffer/in normal mode.
+    -- Not when switching between different files.
+    vim.api.nvim_create_autocmd("CursorMoved", {
+        group = prev_win_augroup,
+        pattern = "*",
+        callback = function()
+            if globals.preview_win_id < 0 then
+                return
+            end
+            if globals.action_counter < 1 then
+                vim.api.nvim_win_set_config(
+                    globals.preview_win_id,
+                    { relative = "cursor", row = 1, col = 0 }
+                )
+                globals.action_counter = globals.action_counter + 1
+            else
+                close_preview_win()
+            end
+        end,
+    })
+    vim.api.nvim_create_autocmd("BufLeave", {
+        group = prev_win_augroup,
+        pattern = "*",
+        callback = function()
+            close_preview_win()
+        end,
+    })
+    vim.api.nvim_create_autocmd("InsertEnter", {
+        group = prev_win_augroup,
+        pattern = "*",
+        callback = close_preview_win,
+    })
+    function M.hop()
+        if globals.pred.line == -1 or globals.pred.column == -1 then
             return
         end
-        if globals.action_counter < 1 then
-            vim.api.nvim_win_set_config(
-                globals.preview_win_id,
-                { relative = "cursor", row = 1, col = 0 }
-            )
-            globals.action_counter = globals.action_counter + 1
-        else
-            close_preview_win()
-        end
-    end,
-})
-vim.api.nvim_create_autocmd("BufLeave", {
-    group = prev_win_augroup,
-    pattern = "*",
-    callback = function()
+
+        -- Adds current position to the jumplist so you can <C-o> back to it if you don't like where you hopped.
+        vim.cmd("normal! m'")
+        local buf_num = vim.fn.bufnr(globals.pred.file, true)
+        vim.fn.bufload(buf_num)
+        vim.api.nvim_set_current_buf(buf_num)
+        vim.api.nvim_win_set_cursor(0, { globals.pred.line, globals.pred.column - 1 })
         close_preview_win()
-    end,
-})
-vim.api.nvim_create_autocmd("InsertEnter", {
-    group = prev_win_augroup,
-    pattern = "*",
-    callback = close_preview_win,
-})
-
----Hops to the predicted cursor position.
-function M.hop()
-    if
-        globals.pred.line == -1
-        or globals.pred.column == -1
-    then
-        return
     end
-
-    -- Adds current position to the jumplist so you can <C-o> back to it if you don't like where you hopped.
-    vim.cmd("normal! m'")
-    local buf_num = vim.fn.bufnr(globals.pred.file, true)
-    vim.fn.bufload(buf_num)
-    vim.api.nvim_set_current_buf(buf_num)
-    vim.api.nvim_win_set_cursor(
-        0,
-        { globals.pred.line, globals.pred.column - 1 }
-    )
-    close_preview_win()
 end
 
 ---Setup function
@@ -311,6 +307,7 @@ function M.setup(opts)
         M.config[opt_key] = opt_val
     end
 
+    local config_ok = false
     if #M.config.api_key == 0 then
         bhop_notify(
             "'api_key' wasn't given, set the api_key in opts.",
@@ -324,6 +321,7 @@ function M.setup(opts)
     else
         local api_key = os.getenv(M.config.api_key)
         if api_key then
+            config_ok = true
             M.config.api_key = api_key
         else
             bhop_notify(
@@ -331,6 +329,9 @@ function M.setup(opts)
                 vim.log.levels.ERROR
             )
         end
+    end
+    if config_ok then
+        init()
     end
 end
 
