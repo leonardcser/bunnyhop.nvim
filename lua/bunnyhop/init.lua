@@ -121,25 +121,25 @@ local function bhop_notify(msg, level, opts)
     vim.notify(msg, level, opts)
 end
 
-local function open_preview_win(cursor_pred_line, cursor_pred_column, cursor_pred_file) --luacheck: no unused args
-    local buf_num = vim.fn.bufnr(cursor_pred_file)
+local function open_preview_win(pred) --luacheck: no unused args
+    local buf_num = vim.fn.bufnr(pred.file)
     if vim.fn.bufexists(buf_num) == 0 then
         bhop_notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
         return
     end
 
-    if cursor_pred_file == "%" then
-        cursor_pred_file = vim.api.nvim_buf_get_name(0)
+    if pred.file == "%" then
+        pred.file = vim.api.nvim_buf_get_name(0)
     end
 
-    local pred_line_content = buf_get_line(buf_num, cursor_pred_line)
+    local pred_line_content = buf_get_line(buf_num, pred.line)
     pred_line_content = pred_line_content:gsub("^%s+", "")
 
     -- Opens preview window.
     -- Closing the existing preview window if it exist to make space for the newly created window.
     close_preview_win()
     local buf = vim.api.nvim_create_buf(false, true)
-    local prev_win_title = vim.fs.basename(cursor_pred_file) .. " : " .. cursor_pred_line
+    local prev_win_title = vim.fs.basename(pred.file) .. " : " .. pred.line
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
     globals.preview_win_id = vim.api.nvim_open_win(buf, false, {
         relative = "cursor",
@@ -230,7 +230,7 @@ local function predict()
 
                 -- Makes sure to only display the preview mode when in normal mode
                 if vim.api.nvim_get_mode().mode == "n" then
-                    open_preview_win(pred.line, pred.column, pred.file)
+                    open_preview_win(pred)
                 end
             end)
         end
