@@ -17,10 +17,10 @@ local globals = {
     DEFAULT_CURSOR_PRED_COLUMN = 1,
     DEFAULT_CURSOR_PRED_FILE = "%",
 }
-globals.hop_args = {
-    cursor_pred_line = globals.DEFAULT_CURSOR_PRED_LINE,
-    cursor_pred_column = globals.DEFAULT_CURSOR_PRED_COLUMN,
-    cursor_pred_file = globals.DEFAULT_CURSOR_PRED_FILE,
+globals.pred = {
+    line = globals.DEFAULT_CURSOR_PRED_LINE,
+    column = globals.DEFAULT_CURSOR_PRED_COLUMN,
+    file = globals.DEFAULT_CURSOR_PRED_FILE,
 }
 globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 globals.action_counter = globals.DEFAULT_ACTION_COUNTER
@@ -224,9 +224,9 @@ local function predict()
             -- "Hack" to get around being unable to call vim functions in a callback.
             vim.schedule(function()
                 local pred = extract_pred(response.choices[1].message.content)
-                globals.hop_args.cursor_pred_line = pred.line
-                globals.hop_args.cursor_pred_column = pred.column
-                globals.hop_args.cursor_pred_file = pred.file
+                globals.pred.line = pred.line
+                globals.pred.column = pred.column
+                globals.pred.file = pred.file
 
                 -- Makes sure to only display the preview mode when in normal mode
                 if vim.api.nvim_get_mode().mode == "n" then
@@ -285,20 +285,20 @@ vim.api.nvim_create_autocmd("InsertEnter", {
 ---Hops to the predicted cursor position.
 function M.hop()
     if
-        globals.hop_args.cursor_pred_line == -1
-        or globals.hop_args.cursor_pred_column == -1
+        globals.pred.line == -1
+        or globals.pred.column == -1
     then
         return
     end
 
     -- Adds current position to the jumplist so you can <C-o> back to it if you don't like where you hopped.
     vim.cmd("normal! m'")
-    local buf_num = vim.fn.bufnr(globals.hop_args.cursor_pred_file, true)
+    local buf_num = vim.fn.bufnr(globals.pred.file, true)
     vim.fn.bufload(buf_num)
     vim.api.nvim_set_current_buf(buf_num)
     vim.api.nvim_win_set_cursor(
         0,
-        { globals.hop_args.cursor_pred_line, globals.hop_args.cursor_pred_column - 1 }
+        { globals.pred.line, globals.pred.column - 1 }
     )
     close_preview_win()
 end
