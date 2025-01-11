@@ -13,14 +13,14 @@ M.config = {
 local globals = {
     DEFAULT_PREVIOUS_WIN_ID = -1,
     DEFAULT_ACTION_COUNTER = 0,
-    DEFAULT_CURSOR_PRED_LINE = 1,
-    DEFAULT_CURSOR_PRED_COLUMN = 1,
-    DEFAULT_CURSOR_PRED_FILE = "%",
+    DEFAULT_PRED_LINE = 1,
+    DEFAULT_PRED_COLUMN = 1,
+    DEFAULT_PRED_FILE = "%",
 }
 globals.pred = {
-    line = globals.DEFAULT_CURSOR_PRED_LINE,
-    column = globals.DEFAULT_CURSOR_PRED_COLUMN,
-    file = globals.DEFAULT_CURSOR_PRED_FILE,
+    line = globals.DEFAULT_PRED_LINE,
+    column = globals.DEFAULT_PRED_COLUMN,
+    file = globals.DEFAULT_PRED_FILE,
 }
 globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 globals.action_counter = globals.DEFAULT_ACTION_COUNTER
@@ -175,21 +175,21 @@ local function extract_pred(llm_output)
     -- "Hack" to get around being unable to call vim functions in a callback.
     local success, pred_str = pcall(vim.json.decode, llm_output)
     local pred = {
-        file = globals.DEFAULT_CURSOR_PRED_FILE,
-        line = globals.DEFAULT_CURSOR_PRED_LINE,
-        column = globals.DEFAULT_CURSOR_PRED_COLUMN,
+        file = globals.DEFAULT_PRED_FILE,
+        line = globals.DEFAULT_PRED_LINE,
+        column = globals.DEFAULT_PRED_COLUMN,
     }
     if success == true then
         pred.file = pred_str[3]
         if #pred.file == 0 or vim.fn.filereadable(pred.file) == 0 then
-            pred.file = globals.DEFAULT_CURSOR_PRED_FILE
+            pred.file = globals.DEFAULT_PRED_FILE
         end
         local pred_buf_num = vim.fn.bufadd(pred.file)
         vim.fn.bufload(pred_buf_num)
 
         pred.line = pred_str[1]
         if type(pred.line) ~= "number" then
-            pred.line = globals.DEFAULT_CURSOR_PRED_LINE
+            pred.line = globals.DEFAULT_PRED_LINE
         else
             pred.line =
                 clip_number(pred.line, 1, vim.api.nvim_buf_line_count(pred_buf_num))
@@ -197,7 +197,7 @@ local function extract_pred(llm_output)
 
         pred.column = pred_str[2]
         if type(pred.column) ~= "number" then
-            pred.column = globals.DEFAULT_CURSOR_PRED_COLUMN
+            pred.column = globals.DEFAULT_PRED_COLUMN
         else
             local pred_line_content =
                 buf_get_line(pred_buf_num, pred.line):gsub("^%s+", "")
