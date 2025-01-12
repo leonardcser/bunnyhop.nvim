@@ -42,6 +42,9 @@ function M.complete(prompt, model, config, callback)
             end
             local response = vim.json.decode(result.stdout)
             if response.error ~= nil then
+                bhop_log.notify("Hugging Face Error: '" .. response.error .. "'", vim.log.levels.ERROR)
+                callback("")
+                return
             end
             callback(response.choices[1].message.content)
         end)
