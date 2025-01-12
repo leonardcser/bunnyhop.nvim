@@ -1,3 +1,4 @@
+local bhop_log = require("bunnyhop.log")
 local M = {}
 
 --- Default config, gets overriden with user config options as needed.
@@ -113,18 +114,10 @@ local function buf_get_line(buf_num, line_num)
     return vim.api.nvim_buf_get_lines(buf_num, line_num - 1, line_num, true)[1]
 end
 
-local function bhop_notify(msg, level, opts)
-    if opts == nil then
-        opts = {}
-    end
-    opts["title"] = "bunnyhop.nvim"
-    vim.notify(msg, level, opts)
-end
-
 local function open_preview_win(pred) --luacheck: no unused args
     local buf_num = vim.fn.bufnr(pred.file)
     if vim.fn.bufexists(buf_num) == 0 then
-        bhop_notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
+        bhop_log.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
         return
     end
 
@@ -214,16 +207,10 @@ local function predict()
         create_prompt(),
         "Qwen/Qwen2.5-Coder-32B-Instruct",
         M.config,
-        function(command_result)
-            if command_result.code ~= 0 then
-                bhop_notify(command_result.stderr, vim.log.levels.ERROR)
-                return
-            end
-
-            local response = vim.json.decode(command_result.stdout)
+        function(completion_result)
             -- "Hack" to get around being unable to call vim functions in a callback.
             vim.schedule(function()
-                local pred = extract_pred(response.choices[1].message.content)
+                local pred = extract_pred(completion_result)
                 globals.pred.line = pred.line
                 globals.pred.column = pred.column
                 globals.pred.file = pred.file
@@ -309,12 +296,12 @@ function M.setup(opts)
 
     local config_ok = false
     if #M.config.api_key == 0 then
-        bhop_notify(
+        bhop_log.notify(
             "'api_key' wasn't given, set the api_key in opts.",
             vim.log.levels.ERROR
         )
     elseif M.config.api_key:match("[a-z]+") ~= nil then
-        bhop_notify(
+        bhop_log.notify(
             "Given api_key is not a name of an enviornment variable.",
             vim.log.levels.ERROR
         )
@@ -324,7 +311,7 @@ function M.setup(opts)
             config_ok = true
             M.config.api_key = api_key
         else
-            bhop_notify(
+            bhop_log.notify(
                 "Enviornment variable '" .. M.config.api_key .. "' not found.",
                 vim.log.levels.ERROR
             )

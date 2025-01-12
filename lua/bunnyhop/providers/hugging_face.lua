@@ -1,3 +1,4 @@
+local bhop_log = require("bunnyhop.logging")
 local M = {}
 
 ---Gets the available models to use.
@@ -34,7 +35,7 @@ function M.complete(prompt, model, config, callback)
         hf_url,
     }, {}, function(result)
         if result.code ~= 0 then
-            bhop_notify(result.stderr, vim.log.levels.ERROR)
+            bhop_log.notify(result.stderr, vim.log.levels.ERROR)
             callback("")
             return
         end
