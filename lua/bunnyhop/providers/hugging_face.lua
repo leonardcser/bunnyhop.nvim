@@ -1,4 +1,4 @@
-local bhop_log = require("bunnyhop.logging")
+local bhop_log = require("bunnyhop.log")
 local M = {}
 
 ---Gets the available models to use.
@@ -40,6 +40,9 @@ function M.complete(prompt, model, config, callback)
             return
         end
         local response = vim.json.decode(result.stdout)
+        if response.error ~= nil then
+            print("HERE")
+        end
         callback(response.choices[1].message.content)
     end)
 end
