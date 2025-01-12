@@ -1,3 +1,4 @@
+local bhop_log = require("bunnyhop.log")
 local M = {}
 
 ---Gets the available models to use.
@@ -32,7 +33,22 @@ function M.complete(prompt, model, config, callback)
         "-d",
         request_body,
         hf_url,
-    }, {}, callback)
+    }, {}, function(result)
+        vim.schedule(function()
+            if result.code ~= 0 then
+                bhop_log.notify(result.stderr, vim.log.levels.ERROR)
+                callback("")
+                return
+            end
+            local response = vim.json.decode(result.stdout)
+            if response.error ~= nil then
+                bhop_log.notify("Hugging Face Error: '" .. response.error .. "'", vim.log.levels.ERROR)
+                callback("")
+                return
+            end
+            callback(response.choices[1].message.content)
+        end)
+    end)
 end
 
 return M
