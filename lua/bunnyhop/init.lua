@@ -207,7 +207,6 @@ local function predict()
     local provider = require("bunnyhop.providers." .. M.config.provider)
     provider.complete(
         create_prompt(),
-        M.config.model,
         M.config,
         function(completion_result)
             -- "Hack" to get around being unable to call vim functions in a callback.
