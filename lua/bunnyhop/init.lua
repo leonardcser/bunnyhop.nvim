@@ -7,6 +7,8 @@ M.config = {
     ---@type "hugging_face"
     provider = "hugging_face",
     ---@type string
+    model = "mistralai/Mistral-7B-Instruct-v0.3",
+    ---@type string
     api_key = "",
     ---@type number
     max_prev_width = 20,
@@ -205,7 +207,6 @@ local function predict()
     local provider = require("bunnyhop.providers." .. M.config.provider)
     provider.complete(
         create_prompt(),
-        "Qwen/Qwen2.5-Coder-32B-Instruct",
         M.config,
         function(completion_result)
             -- "Hack" to get around being unable to call vim functions in a callback.
