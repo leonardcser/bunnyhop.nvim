@@ -2,6 +2,7 @@ local bhop_log = require("bunnyhop.log")
 local M = {}
 
 ---Gets the available models to use.
+---@param config bhop.config User config. Used to get the api_key for now, mabye more things later.
 ---@param callback function Function that gets called after the request is made.
 ---@return string[]
 function M.get_models(config, callback) --luacheck: no unused args
@@ -11,15 +12,14 @@ end
 
 ---Completes the given prompt.
 ---@param prompt string Input prompt.
----@param model string LLM model name.
 ---@param config bhop.config User config. Used to get the api_key for now, mabye more things later.
 ---@param callback function Function that gets called after the request is made.
 ---@return nil
-function M.complete(prompt, model, config, callback)
+function M.complete(prompt, config, callback)
     local hf_url =
-        "https://api-inference.huggingface.co/models/" .. model .. "/v1/chat/completions"
+        "https://api-inference.huggingface.co/models/" .. config.model .. "/v1/chat/completions"
     local request_body = vim.json.encode {
-        model = model,
+        model = config.model,
         messages = { { role = "user", content = prompt } },
         max_tokens = 30,
         stream = false,
