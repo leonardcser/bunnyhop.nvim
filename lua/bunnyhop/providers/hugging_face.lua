@@ -17,7 +17,7 @@ end
 ---@return nil
 function M.complete(prompt, model, config, callback)
     local hf_url =
-        "https://api-inference.huggingface.co/models/Qwen/Qwen2.5-Coder-32B-Instruct/v1/chat/completions"
+        "https://api-inference.huggingface.co/models/" .. model .. "/v1/chat/completions"
     local request_body = vim.json.encode {
         model = model,
         messages = { { role = "user", content = prompt } },
