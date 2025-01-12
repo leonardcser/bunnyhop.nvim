@@ -34,16 +34,17 @@ function M.complete(prompt, model, config, callback)
         request_body,
         hf_url,
     }, {}, function(result)
-        if result.code ~= 0 then
-            bhop_log.notify(result.stderr, vim.log.levels.ERROR)
-            callback("")
-            return
-        end
-        local response = vim.json.decode(result.stdout)
-        if response.error ~= nil then
-            print("HERE")
-        end
-        callback(response.choices[1].message.content)
+        vim.schedule(function()
+            if result.code ~= 0 then
+                bhop_log.notify(result.stderr, vim.log.levels.ERROR)
+                callback("")
+                return
+            end
+            local response = vim.json.decode(result.stdout)
+            if response.error ~= nil then
+            end
+            callback(response.choices[1].message.content)
+        end)
     end)
 end
 
