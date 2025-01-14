@@ -7,7 +7,7 @@ M.config = {
     ---@type "hugging_face"
     provider = "hugging_face",
     ---@type string
-    model = "mistralai/Mistral-7B-Instruct-v0.3",
+    model = "Qwen/Qwen2.5-Coder-32B-Instruct",
     ---@type string
     api_key = "",
     ---@type number
@@ -103,7 +103,11 @@ local function create_prompt()
     end
 
     local prompt = "Predict next cursor position based on the following information.\n"
-        .. 'ONLY output the row and column of the cursor in the format [line_num, column, "buffer_name"].\n'
+        .. "ONLY output the following format:\n"
+        .. '[line_num, column, "buffer_name"].\n'
+        .. "'line_num' is the line number the cursor should be on next\n"
+        .. "'column' is the column the cursor should be on next\n"
+        .. "'buffer_name' should be the name of the file the cursor should be on next\n"
         .. "DO NOT HALLUCINATE!\n" -- for the memes
         .. "# History of Cursor Jumps\n"
         .. jumplist_csv
