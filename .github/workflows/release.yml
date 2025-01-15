@@ -1,5 +1,5 @@
----
-name: "Release"
+name: Luarocks Release
+
 on:
   push:
     tags:
