@@ -9,15 +9,17 @@ The spec currently has three different functions that need to be implemented.
 ### General Requirements of each function
 - It should be non-blocking and async.
 - It should be documented with the types shown in the examples below.
+- It should pass on its output to the given callback.
 
 ```lua
 ---Gets the available models to use.
+---@param config bhop.Opts User config. Used to get the api_key for now, mabye more things later.
 ---@param callback function Function that gets called after the request is made.
----@return string[]
+---@return nil
 local function get_models(callback)
 end
 ```
-Example output:
+Example Callback Input:
 ```lua
 {"gpt-3", "gpt-4", "o1-mini", "o1-preview"}
 ```
@@ -25,14 +27,12 @@ Example output:
 ```lua
 ---Completes the given prompt.
 ---@param prompt string Input prompt.
----@param model string LLM model name.
----@param config bhop.config User config. Used to get the api_key for now, mabye more things later.
+---@param config bhop.Opts User config. Used to get the api_key for now, mabye more things later.
 ---@param callback function Function that gets called after the request is made.
 ---@return nil
-function M.complete(prompt, model, config, callback)
-end
+function M.complete(prompt, config, callback)
 ```
-Example output:
+Example Callback Input:
 ```lua
 "I'm the a model based on the GPT-4 architecture..."
 ```
