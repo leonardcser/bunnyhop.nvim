@@ -4,15 +4,13 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  release:
-    name: Release To GitHub
+  release-please:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v4
