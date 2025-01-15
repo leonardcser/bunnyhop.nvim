@@ -3,11 +3,10 @@ describe("Provider Tests", function()
     local bhop = require("bunnyhop")
     setup(function()
         local PROVIDERS_PATH = "./lua/bunnyhop/providers/"
-        local provider_name = ""
         for indx, provider_path in
             pairs(vim.fn.glob(PROVIDERS_PATH .. "*.lua", false, true))
         do
-            provider_name = vim.fn.split(vim.fs.basename(provider_path), ".lua")[1]
+            local provider_name = vim.fn.split(vim.fs.basename(provider_path), ".lua")[1]
             providers[indx] = require("bunnyhop.providers." .. provider_name)
         end
         bhop.setup { api_key = "HF_API_KEY" }
