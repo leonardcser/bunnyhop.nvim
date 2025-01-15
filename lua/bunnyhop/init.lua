@@ -1,16 +1,12 @@
 local bhop_log = require("bunnyhop.log")
 local M = {}
 
---- Default config, gets overriden with user config options as needed.
----@class bhop.config
+-- The default config, gets overriden with user config options as needed.
+---@class bhop.Opts
 M.config = {
-    ---@type "hugging_face"
     provider = "hugging_face",
-    ---@type string
     model = "Qwen/Qwen2.5-Coder-32B-Instruct",
-    ---@type string
     api_key = "",
-    ---@type number
     max_prev_width = 20,
 }
 local globals = {
@@ -292,7 +288,7 @@ local function init()
 end
 
 ---Setup function
----@param opts? bhop.config
+---@param opts? bhop.Opts
 function M.setup(opts)
     ---@diagnostic disable-next-line: param-type-mismatch
     for opt_key, opt_val in pairs(opts) do
