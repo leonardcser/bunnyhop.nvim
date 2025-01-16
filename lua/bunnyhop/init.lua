@@ -204,7 +204,7 @@ local function extract_pred(llm_output)
 end
 
 local function predict()
-    local provider = require("bunnyhop.providers." .. M.config.provider)
+    local provider = require("bunnyhop.adapters." .. M.config.provider)
     provider.complete(
         create_prompt(),
         M.config,
