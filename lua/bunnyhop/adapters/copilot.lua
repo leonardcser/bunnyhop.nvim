@@ -70,18 +70,22 @@ end
 ---Authorize the GitHub OAuth token
 ---@param callback fun(github_token: string): nil
 ---@return nil
-local function authorize_token(callback)
-    if github_token and github_token.expires_at > os.time() then
-        bhop_log.notify("Reusing GitHub Copilot token", vim.log.levels.DEBUG)
-        return github_token
-    end
+local function authorize_token(api_key, oauth_token, callback) --luacheck: no unused args
+    -- TODO: add this caching later as the api_key is not handled correctly for copilot yet.
+    -- Currently the api_key is handled only the hugging face way, I'm gonna refactor this
+    -- to make it so that each provider has a "handle_api_key" function
+    -- to handle it the way they need to.
+    -- if api_key ~= "" and api_key.expires_at > os.time() then
+    --     bhop_log.notify("Reusing GitHub Copilot token", vim.log.levels.DEBUG)
+    --     return api_key
+    -- end
 
     bhop_log.notify("Authorizing GitHub Copilot token", vim.log.levels.DEBUG)
 
     vim.system({
         "curl",
         "-H",
-        "Authorization: Bearer " .. _oauth_token,
+        "Authorization: Bearer " .. oauth_token,
         "-H",
         "Accept: " .. "application/json",
         "https://api.github.com/copilot_internal/v2/token",
@@ -123,7 +127,7 @@ function M.complete(prompt, config, callback)
         return false
     end
 
-    authorize_token(function(api_key)
+    authorize_token(config.api_key, _oauth_token, function(api_key)
         if not api_key then
             bhop_log.notify(
                 "Copilot Adapter: Could not authorize your GitHub Copilot token",
