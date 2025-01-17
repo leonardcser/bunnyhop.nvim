@@ -4,7 +4,7 @@ local M = {}
 -- The default config, gets overriden with user config options as needed.
 ---@class bhop.Opts
 M.config = {
-    provider = "hugging_face",
+    adapter = "hugging_face",
     model = "Qwen/Qwen2.5-Coder-32B-Instruct",
     api_key = "",
     max_prev_width = 20,
@@ -204,7 +204,7 @@ local function extract_pred(llm_output)
 end
 
 local function predict()
-    local provider = require("bunnyhop.adapters." .. M.config.provider)
+    local provider = require("bunnyhop.adapters." .. M.config.adapter)
     provider.complete(
         create_prompt(),
         M.config,
@@ -295,29 +295,9 @@ function M.setup(opts)
         M.config[opt_key] = opt_val
     end
 
-    local config_ok = false
-    if #M.config.api_key == 0 then
-        bhop_log.notify(
-            "'api_key' wasn't given, set the api_key in opts.",
-            vim.log.levels.ERROR
-        )
-    elseif M.config.api_key:match("[a-z]+") ~= nil then
-        bhop_log.notify(
-            "Given api_key is not a name of an enviornment variable.",
-            vim.log.levels.ERROR
-        )
-    else
-        local api_key = os.getenv(M.config.api_key)
-        if api_key then
-            config_ok = true
-            M.config.api_key = api_key
-        else
-            bhop_log.notify(
-                "Enviornment variable '" .. M.config.api_key .. "' not found.",
-                vim.log.levels.ERROR
-            )
-        end
-    end
+    M.config.api_key = require("bunnyhop.adapters." .. M.config.adapter).process_api_key(M.config.api_key)
+    local config_ok = M.config.api_key ~= nil
+    -- TODO: Alert user that the config was setup incorrectly and bunnyhop was not initialized.
     if config_ok then
         init()
     end
