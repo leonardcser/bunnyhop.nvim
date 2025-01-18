@@ -141,15 +141,6 @@ end
 ---@param callback fun(completion_result: string): nil Function that gets called after the request is made.
 ---@return nil
 function M.complete(prompt, config, callback)
-    _oauth_token = get_github_token()
-    if not _oauth_token then
-        bhop_log.notify(
-            "Copilot Adapter: No token found. Please refer to https://github.com/github/copilot.vim",
-            vim.log.levels.ERROR
-        )
-        return false
-    end
-
     authorize_token(config.api_key, _oauth_token, function(api_key)
         if not api_key then
             bhop_log.notify(
