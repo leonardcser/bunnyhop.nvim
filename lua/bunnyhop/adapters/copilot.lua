@@ -80,8 +80,6 @@ local function authorize_token(api_key, oauth_token, callback) --luacheck: no un
     --     return api_key
     -- end
 
-    bhop_log.notify("Authorizing GitHub Copilot token", vim.log.levels.DEBUG)
-
     vim.system({
         "curl",
         "-H",
