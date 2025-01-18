@@ -27,6 +27,7 @@ function M.process_api_key(api_key, callback)
     local env_api_key = os.getenv(api_key)
     if env_api_key then
         callback(env_api_key)
+        return
     end
     bhop_log.notify(
         "Enviornment variable '" .. api_key .. "' not found.",
