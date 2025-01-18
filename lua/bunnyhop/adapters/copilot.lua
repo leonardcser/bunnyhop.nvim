@@ -127,7 +127,12 @@ end
 ---@param callback fun(models: string[]): nil Function that gets called after the request is made.
 ---@return nil
 function M.get_models(config, callback) --luacheck: no unused args
-    callback { "gpt-4o-2024-08-06" }
+    callback {
+        "gpt-4o-2024-08-06",
+        "claude-3.5-sonnet",
+        "o1-2024-12-17",
+        "o1-mini-2024-09-12",
+    }
 end
 
 ---Completes the given prompt.

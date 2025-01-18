@@ -4,9 +4,15 @@ local M = {}
 -- The default config, gets overriden with user config options as needed.
 ---@class bhop.Opts
 M.config = {
-    adapter = "hugging_face",
-    model = "Qwen/Qwen2.5-Coder-32B-Instruct",
+    adapter = "copilot",
+    -- Model to use for chosen provider.
+    -- To know what models are available for chosen adapter,
+    -- run `:lua require("bunnyhop.adapters.{adapter}").get_models()`
+    model = "gpt-4o-2024-08-06",
+    -- Copilot doesn't use the API key, Hugging Face does.
     api_key = "",
+    -- Max width the preview window will be.
+    -- Here for if you want to make the preview window bigger/smaller.
     max_prev_width = 20,
 }
 local globals = {
