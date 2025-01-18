@@ -7,6 +7,8 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
 
 ## Features
 
+#### Supports Copilot and Hugging Face LLM's
+
 #### Predicts your next desired cursor position a preview window, allowing you to hop to it via your chosen keybinding.
 
 ![bunnyhop_feature_1](https://github.com/user-attachments/assets/9d9be27e-c8b7-4d02-9c64-4ba7a860f922)
@@ -15,9 +17,9 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
 
 ### Prerequisites
 
-The only provider supported currently is Hugging Face's [Serverless](https://huggingface.co/docs/api-inference/en/index).
-Hence, Hugging Face's API key is required. Learn how to set it up [here](https://huggingface.co/docs/api-inference/en/getting-started).
-Once you have you're API key, create an enviornment variable for the key, eg. `export HF_API_KEY=************`
+Either Copilot(Recommenced) or Hugging Face's [Serverless](https://huggingface.co/docs/api-inference/en/index).
+- For Copilot, you only need to set it up via [copilot.lua](https://github.com/zbirenbaum/copilot.lua) or [copilot.vim](https://github.com/github/copilot.vim).
+- For Hugging Face, an API key is required. Learn how to set it up [here](https://huggingface.co/docs/api-inference/en/getting-started). Once you have the API key, create an enviornment variable for the key, eg. `export HF_API_KEY=************`.
 
 ### [lazy.nvim](https://github.com/folke/lazy.nvim)
 
@@ -36,9 +38,9 @@ Once you have you're API key, create an enviornment variable for the key, eg. `e
             desc = "[H]op to predicted location.",
         },
     },
-    -- The only options currently required is the api_key.
-    -- Set it to the enviornment variable name of your hugging face API key.
-    opts = { api_key = "HF_API_KEY" },
+    opts = {}, -- if using copilot
+    -- Or
+    -- opts = {adapter = "hugging_face", api_key = "HF_API_KEY", model = "Qwen/Qwen2.5-Coder-32B-Instruct"}, -- if using hugging face
 },
 ```
 
@@ -48,7 +50,7 @@ Bunnyhop is configured via the setup() function. The default configuration value
 
 ## Development
 
-### Run tests
+### Run Tests Locally
 
 
 Running tests requires either
