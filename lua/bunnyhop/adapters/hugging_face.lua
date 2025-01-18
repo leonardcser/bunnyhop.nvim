@@ -5,7 +5,7 @@ local M = {}
 ---If an error occurs, the function returns nil and if it was successful, it returns the api_key.
 ---@param api_key string
 ---@param callback fun(api_key: string | nil): nil Function that gets called after the request is made.
----@return string | nil
+---@return nil
 function M.process_api_key(api_key, callback)
     if #api_key == 0 then
         bhop_log.notify(
