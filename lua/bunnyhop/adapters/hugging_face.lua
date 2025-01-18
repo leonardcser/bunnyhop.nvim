@@ -4,13 +4,15 @@ local M = {}
 ---Processes the given api_key for the Hugging Face provider.
 ---If an error occurs, the function returns nil and if it was successful, it returns the api_key.
 ---@param api_key string
+---@param callback fun(api_key: string | nil): nil Function that gets called after the request is made.
 ---@return string | nil
-function M.process_api_key(api_key)
+function M.process_api_key(api_key, callback)
     if #api_key == 0 then
         bhop_log.notify(
             "'api_key' wasn't given, set the api_key in opts.",
             vim.log.levels.ERROR
         )
+        callback(nil)
         return
     end
     if api_key:match("[a-z]+") ~= nil then
@@ -18,17 +20,19 @@ function M.process_api_key(api_key)
             "Given api_key is not a name of an enviornment variable.",
             vim.log.levels.ERROR
         )
+        callback(nil)
         return
     end
 
     local env_api_key = os.getenv(api_key)
     if env_api_key then
-        return env_api_key
+        callback(env_api_key)
     end
     bhop_log.notify(
         "Enviornment variable '" .. api_key .. "' not found.",
         vim.log.levels.ERROR
     )
+    callback(nil)
 end
 
 ---Gets the available models to use.
