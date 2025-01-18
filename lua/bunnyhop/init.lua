@@ -295,7 +295,7 @@ function M.setup(opts)
         M.config[opt_key] = opt_val
     end
 
-    M.config.api_key = require("bunnyhop.adapters." .. M.config.adapter).process_api_key(M.config.api_key)
+    require("bunnyhop.adapters." .. M.config.adapter).process_api_key(M.config.api_key, function(api_key) M.config.api_key = api_key end)
     local config_ok = M.config.api_key ~= nil
     -- TODO: Alert user that the config was setup incorrectly and bunnyhop was not initialized.
     if config_ok then
