@@ -207,8 +207,8 @@ local function extract_pred(llm_output)
 end
 
 local function predict()
-    local provider = require("bunnyhop.adapters." .. M.config.adapter)
-    provider.complete(create_prompt(), M.config, function(completion_result)
+    local adapter = require("bunnyhop.adapters." .. M.config.adapter)
+    adapter.complete(create_prompt(), M.config, function(completion_result)
         -- "Hack" to get around being unable to call vim functions in a callback.
         vim.schedule(function()
             local pred = extract_pred(completion_result)
