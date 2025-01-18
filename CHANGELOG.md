@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.4.0](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.3.1...v0.4.0) (2025-01-18)
+
+
+### Features
+
+* add copilot adapter ([8f56a1a](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/8f56a1ad794a0b59dad77c676a3f2574667514a1))
+* add process_api_key to copilot adapter ([2da9e12](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/2da9e1266e2f75fd853ea96c2d53bb57202e72a9))
+* add rest of currently available copilot models ([256c9d4](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/256c9d463069702feaebfbf59376decbcdf128c8))
+
+
+### Bug Fixes
+
+* add early return if api_key was successfully found ([d01dd90](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/d01dd90037af7b1e3357c5c6c57b9a99342b8c63))
+* fix linter errors and add TODO ([42c2c77](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/42c2c77ed871f72a3ee96f4fb5e931e2a390e578))
+* fix linter warnings ([694a395](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/694a395151080e537e5ecfd386d22587abc9319d))
+
 ## [0.3.1](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.3.0...v0.3.1) (2025-01-16)
 
 
