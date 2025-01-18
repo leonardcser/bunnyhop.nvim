@@ -12,6 +12,20 @@ The spec currently has three different functions that need to be implemented.
 - It should pass on its output to the given callback.
 
 ```lua
+---Processes the given api_key for the Hugging Face provider.
+---If an error occurs, the function returns nil and if it was successful, it returns the api_key.
+---@param api_key string
+---@param callback fun(api_key: string | nil): nil Function that gets called after the request is made.
+---@return nil
+local function process_api_key(api_key, callback)
+end
+```
+Example Callback Input(aka function output):
+```lua
+"hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+```
+
+```lua
 ---Gets the available models to use.
 ---@param config bhop.Opts User config. Used to get the api_key for now, mabye more things later.
 ---@param callback function Function that gets called after the request is made.

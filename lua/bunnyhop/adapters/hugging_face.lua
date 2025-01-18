@@ -1,6 +1,41 @@
 local bhop_log = require("bunnyhop.log")
 local M = {}
 
+---Processes the given api_key for the Hugging Face provider.
+---If an error occurs, the function returns nil and if it was successful, it returns the api_key.
+---@param api_key string
+---@param callback fun(api_key: string | nil): nil Function that gets called after the request is made.
+---@return nil
+function M.process_api_key(api_key, callback)
+    if #api_key == 0 then
+        bhop_log.notify(
+            "'api_key' wasn't given, set the api_key in opts.",
+            vim.log.levels.ERROR
+        )
+        callback(nil)
+        return
+    end
+    if api_key:match("[a-z]+") ~= nil then
+        bhop_log.notify(
+            "Given api_key is not a name of an enviornment variable.",
+            vim.log.levels.ERROR
+        )
+        callback(nil)
+        return
+    end
+
+    local env_api_key = os.getenv(api_key)
+    if env_api_key then
+        callback(env_api_key)
+        return
+    end
+    bhop_log.notify(
+        "Enviornment variable '" .. api_key .. "' not found.",
+        vim.log.levels.ERROR
+    )
+    callback(nil)
+end
+
 ---Gets the available models to use.
 ---@param config bhop.Opts User config. Used to get the api_key for now, mabye more things later.
 ---@param callback fun(models: string[]): nil Function that gets called after the request is made.
@@ -21,7 +56,7 @@ function M.complete(prompt, config, callback)
     local request_body = vim.json.encode {
         model = config.model,
         messages = { { role = "user", content = prompt } },
-        max_tokens = 30,
+        max_tokens = 30, -- TODO: increase to 50
         stream = false,
     }
     vim.system({

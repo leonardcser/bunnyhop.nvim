@@ -104,6 +104,24 @@ local function authorize_token(api_key, oauth_token, callback) --luacheck: no un
     end)
 end
 
+---Processes the given api_key for the Hugging Face provider.
+---If an error occurs, the function returns nil and if it was successful, it returns the api_key.
+---@param api_key string
+---@param callback fun(api_key: string | nil): nil Function that gets called after the request is made.
+---@return nil
+function M.process_api_key(api_key, callback)
+    _oauth_token = get_github_token()
+    if not _oauth_token then
+        bhop_log.notify(
+            "Copilot Adapter: No token found. Please refer to https://github.com/github/copilot.vim",
+            vim.log.levels.ERROR
+        )
+        return
+    end
+
+    authorize_token(api_key, _oauth_token, callback)
+end
+
 ---Gets the available models to use.
 ---@param config bhop.Opts User config. Used to get the api_key for now, mabye more things later.
 ---@param callback fun(models: string[]): nil Function that gets called after the request is made.
