@@ -97,7 +97,15 @@ local function authorize_token(api_key, oauth_token, callback) --luacheck: no un
             return
         end
         vim.schedule(function()
-            callback(vim.fn.json_decode(result.stdout)["token"])
+            local token = vim.fn.json_decode(result.stdout)["token"]
+            if not token then
+                bhop_log.notify(
+                    "Copilot Adapter: Could not authorize your GitHub Copilot token",
+                    vim.log.levels.ERROR
+                )
+                return
+            end
+            callback(token)
         end)
     end)
 end
@@ -140,13 +148,6 @@ end
 ---@return nil
 function M.complete(prompt, config, callback)
     authorize_token(config.api_key, _oauth_token, function(api_key)
-        if not api_key then
-            bhop_log.notify(
-                "Copilot Adapter: Could not authorize your GitHub Copilot token",
-                vim.log.levels.ERROR
-            )
-            return
-        end
         local url = "https://api.githubcopilot.com/chat/completions"
         local body = vim.json.encode {
             model = config.model,
