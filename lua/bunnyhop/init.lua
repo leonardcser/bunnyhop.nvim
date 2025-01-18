@@ -119,7 +119,10 @@ end
 local function open_preview_win(pred) --luacheck: no unused args
     local buf_num = vim.fn.bufnr(pred.file)
     if vim.fn.bufexists(buf_num) == 0 then
-        bhop_log.notify("Buffer number: " .. buf_num .. " doesn't exist", vim.log.levels.WARN)
+        bhop_log.notify(
+            "Buffer number: " .. buf_num .. " doesn't exist",
+            vim.log.levels.WARN
+        )
         return
     end
 
@@ -205,24 +208,20 @@ end
 
 local function predict()
     local provider = require("bunnyhop.adapters." .. M.config.adapter)
-    provider.complete(
-        create_prompt(),
-        M.config,
-        function(completion_result)
-            -- "Hack" to get around being unable to call vim functions in a callback.
-            vim.schedule(function()
-                local pred = extract_pred(completion_result)
-                globals.pred.line = pred.line
-                globals.pred.column = pred.column
-                globals.pred.file = pred.file
+    provider.complete(create_prompt(), M.config, function(completion_result)
+        -- "Hack" to get around being unable to call vim functions in a callback.
+        vim.schedule(function()
+            local pred = extract_pred(completion_result)
+            globals.pred.line = pred.line
+            globals.pred.column = pred.column
+            globals.pred.file = pred.file
 
-                -- Makes sure to only display the preview mode when in normal mode
-                if vim.api.nvim_get_mode().mode == "n" then
-                    open_preview_win(pred)
-                end
-            end)
-        end
-    )
+            -- Makes sure to only display the preview mode when in normal mode
+            if vim.api.nvim_get_mode().mode == "n" then
+                open_preview_win(pred)
+            end
+        end)
+    end)
 end
 
 function M.hop() end
@@ -295,7 +294,12 @@ function M.setup(opts)
         M.config[opt_key] = opt_val
     end
 
-    require("bunnyhop.adapters." .. M.config.adapter).process_api_key(M.config.api_key, function(api_key) M.config.api_key = api_key end)
+    require("bunnyhop.adapters." .. M.config.adapter).process_api_key(
+        M.config.api_key,
+        function(api_key)
+            M.config.api_key = api_key
+        end
+    )
     local config_ok = M.config.api_key ~= nil
     -- TODO: Alert user that the config was setup incorrectly and bunnyhop was not initialized.
     if config_ok then
