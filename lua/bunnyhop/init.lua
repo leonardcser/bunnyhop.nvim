@@ -122,8 +122,8 @@ local function buf_get_line(buf_num, line_num)
     return vim.api.nvim_buf_get_lines(buf_num, line_num - 1, line_num, true)[1]
 end
 
-local function open_preview_win(pred) --luacheck: no unused args
-    local buf_num = vim.fn.bufnr(pred.file)
+local function open_preview_win(prediction, max_prev_width) --luacheck: no unused args
+    local buf_num = vim.fn.bufnr(prediction.file)
     if vim.fn.bufexists(buf_num) == 0 then
         bhop_log.notify(
             "Buffer number: " .. buf_num .. " doesn't exist",
@@ -132,27 +132,26 @@ local function open_preview_win(pred) --luacheck: no unused args
         return
     end
 
-    if pred.file == "%" then
-        pred.file = vim.api.nvim_buf_get_name(0)
+    if prediction.file == "%" then
+        prediction.file = vim.api.nvim_buf_get_name(0)
     end
 
-    local pred_line_content = buf_get_line(buf_num, pred.line)
+    local pred_line_content = buf_get_line(buf_num, prediction.line)
     pred_line_content = pred_line_content:gsub("^%s+", "")
 
     -- Opens preview window.
     -- Closing the existing preview window if it exist to make space for the newly created window.
-    close_preview_win()
     local buf = vim.api.nvim_create_buf(false, true)
-    local prev_win_title = vim.fs.basename(pred.file) .. " : " .. pred.line
+    local prev_win_title = vim.fs.basename(prediction.file) .. " : " .. prediction.line
     vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
-    globals.preview_win_id = vim.api.nvim_open_win(buf, false, {
+    local id =  vim.api.nvim_open_win(buf, false, {
         relative = "cursor",
         row = 1,
         col = 0,
         width = vim.fn.max {
             1,
             vim.fn.min {
-                M.config.max_prev_width,
+                max_prev_width,
                 vim.fn.max {
                     #pred_line_content,
                     #prev_win_title,
@@ -164,6 +163,7 @@ local function open_preview_win(pred) --luacheck: no unused args
         border = "single",
         title = prev_win_title,
     })
+    return id
 end
 
 local function clip_number(num, min, max)
@@ -176,7 +176,6 @@ local function clip_number(num, min, max)
 end
 
 local function extract_pred(llm_output)
-    -- "Hack" to get around being unable to call vim functions in a callback.
     local success, pred_str = pcall(vim.json.decode, llm_output)
     local pred = {
         file = globals.DEFAULT_PRED_FILE,
@@ -212,21 +211,11 @@ local function extract_pred(llm_output)
     return pred
 end
 
-local function predict()
-    local adapter = require("bunnyhop.adapters." .. M.config.adapter)
-    adapter.complete(create_prompt(), M.config, function(completion_result)
+local function predict(config, callback)
+    local adapter = require("bunnyhop.adapters." .. config.adapter)
+    adapter.complete(create_prompt(), config, function(completion_result)
         -- "Hack" to get around being unable to call vim functions in a callback.
-        vim.schedule(function()
-            local pred = extract_pred(completion_result)
-            globals.pred.line = pred.line
-            globals.pred.column = pred.column
-            globals.pred.file = pred.file
-
-            -- Makes sure to only display the preview mode when in normal mode
-            if vim.api.nvim_get_mode().mode == "n" then
-                open_preview_win(pred)
-            end
-        end)
+        callback(extract_pred(completion_result))
     end)
 end
 
@@ -238,9 +227,20 @@ local function init()
         pattern = "i:n",
         callback = function()
             local current_win_config = vim.api.nvim_win_get_config(0)
-            if current_win_config.relative == "" then
-                predict()
+            if current_win_config.relative ~= "" then
+                return
             end
+            predict(M.config, function(prediction)
+
+                globals.pred.line = prediction.line
+                globals.pred.column = prediction.column
+                globals.pred.file = prediction.file
+
+                -- Makes sure to only display the preview mode when in normal mode
+                if vim.api.nvim_get_mode().mode == "n" then
+                    globals.preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
+                end
+            end)
         end,
     })
     local prev_win_augroup =
@@ -251,6 +251,10 @@ local function init()
         group = prev_win_augroup,
         pattern = "*",
         callback = function()
+            -- This should be enough to move the preview window around and not require closing it in open_preview_win.
+            -- Currently, the behavior is as follows:
+            -- The window opens when going into normal mode, when the cursor is moved, the first window lingers but then the following windows work as expected.
+            -- The question I need to find the answer to is why does the first window linger? shouldn't it move just like the following ones do?
             if globals.preview_win_id < 0 then
                 return
             end
@@ -311,7 +315,10 @@ function M.setup(opts)
     if config_ok then
         init()
     else
-        bhop_log.notify("Error: bunnyhop config was incorrect, not initializing", vim.log.levels.ERROR)
+        bhop_log.notify(
+            "Error: bunnyhop config was incorrect, not initializing",
+            vim.log.levels.ERROR
+        )
     end
 end
 
