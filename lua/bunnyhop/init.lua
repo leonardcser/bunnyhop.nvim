@@ -176,7 +176,6 @@ local function clip_number(num, min, max)
 end
 
 local function extract_pred(llm_output)
-    -- "Hack" to get around being unable to call vim functions in a callback.
     local success, pred_str = pcall(vim.json.decode, llm_output)
     local pred = {
         file = globals.DEFAULT_PRED_FILE,
@@ -212,20 +211,30 @@ local function extract_pred(llm_output)
     return pred
 end
 
-local function predict()
-    local adapter = require("bunnyhop.adapters." .. M.config.adapter)
-    adapter.complete(create_prompt(), M.config, function(completion_result)
+-- local function predict()
+--     local adapter = require("bunnyhop.adapters." .. M.config.adapter)
+--     adapter.complete(create_prompt(), M.config, function(completion_result)
+--         -- "Hack" to get around being unable to call vim functions in a callback.
+--         vim.schedule(function()
+--             local pred = extract_pred(completion_result)
+--             globals.pred.line = pred.line
+--             globals.pred.column = pred.column
+--             globals.pred.file = pred.file
+--
+--             -- Makes sure to only display the preview mode when in normal mode
+--             if vim.api.nvim_get_mode().mode == "n" then
+--                 open_preview_win(pred)
+--             end
+--         end)
+--     end)
+-- end
+
+local function predict(config, callback)
+    local adapter = require("bunnyhop.adapters." .. config.adapter)
+    adapter.complete(create_prompt(), config, function(completion_result)
         -- "Hack" to get around being unable to call vim functions in a callback.
         vim.schedule(function()
-            local pred = extract_pred(completion_result)
-            globals.pred.line = pred.line
-            globals.pred.column = pred.column
-            globals.pred.file = pred.file
-
-            -- Makes sure to only display the preview mode when in normal mode
-            if vim.api.nvim_get_mode().mode == "n" then
-                open_preview_win(pred)
-            end
+            callback(extract_pred(completion_result))
         end)
     end)
 end
@@ -238,9 +247,19 @@ local function init()
         pattern = "i:n",
         callback = function()
             local current_win_config = vim.api.nvim_win_get_config(0)
-            if current_win_config.relative == "" then
-                predict()
+            if current_win_config.relative ~= "" then
+                return
             end
+            predict(M.config, function(prediction)
+                globals.pred.line = prediction.line
+                globals.pred.column = prediction.column
+                globals.pred.file = prediction.file
+
+                -- Makes sure to only display the preview mode when in normal mode
+                if vim.api.nvim_get_mode().mode == "n" then
+                    open_preview_win(prediction)
+                end
+            end)
         end,
     })
     local prev_win_augroup =
@@ -311,7 +330,10 @@ function M.setup(opts)
     if config_ok then
         init()
     else
-        bhop_log.notify("Error: bunnyhop config was incorrect, not initializing", vim.log.levels.ERROR)
+        bhop_log.notify(
+            "Error: bunnyhop config was incorrect, not initializing",
+            vim.log.levels.ERROR
+        )
     end
 end
 
