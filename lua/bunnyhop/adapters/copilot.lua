@@ -79,6 +79,7 @@ local function authorize_token(api_key, oauth_token, callback) --luacheck: no un
         and _expires_at > os.time()
     then
         callback(api_key)
+        return
     end
 
     vim.system({
