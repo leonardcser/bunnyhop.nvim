@@ -3,6 +3,7 @@ local M = {}
 
 ---@type string|nil
 local _oauth_token
+local _expires_at
 
 --- Finds the configuration path
 local function find_config_path()
@@ -71,16 +72,14 @@ end
 ---@param callback fun(github_token: string): nil
 ---@return nil
 local function authorize_token(api_key, oauth_token, callback) --luacheck: no unused args
-    -- TODO: add this caching later as the api_key is not handled correctly for copilot yet.
-    -- Currently the api_key is handled only the hugging face way, I'm gonna refactor this
-    -- to make it so that each provider has a "handle_api_key" function
-    -- to handle it the way they need to.
-    -- if api_key ~= "" and api_key.expires_at > os.time() then
-    --     bhop_log.notify("Reusing GitHub Copilot token", vim.log.levels.DEBUG)
-    --     return api_key
-    -- end
-
-    bhop_log.notify("Authorizing GitHub Copilot token", vim.log.levels.DEBUG)
+    if
+        api_key ~= nil
+        and api_key ~= ""
+        and _expires_at ~= nil
+        and _expires_at > os.time()
+    then
+        callback(api_key)
+    end
 
     vim.system({
         "curl",
@@ -99,7 +98,16 @@ local function authorize_token(api_key, oauth_token, callback) --luacheck: no un
             return
         end
         vim.schedule(function()
-            callback(vim.fn.json_decode(result.stdout)["token"])
+            local token = vim.fn.json_decode(result.stdout)
+            if not token then
+                bhop_log.notify(
+                    "Copilot Adapter: Could not authorize your GitHub Copilot token",
+                    vim.log.levels.ERROR
+                )
+                return
+            end
+            _expires_at = token.expires_at
+            callback(token["token"])
         end)
     end)
 end
@@ -141,23 +149,7 @@ end
 ---@param callback fun(completion_result: string): nil Function that gets called after the request is made.
 ---@return nil
 function M.complete(prompt, config, callback)
-    _oauth_token = get_github_token()
-    if not _oauth_token then
-        bhop_log.notify(
-            "Copilot Adapter: No token found. Please refer to https://github.com/github/copilot.vim",
-            vim.log.levels.ERROR
-        )
-        return false
-    end
-
     authorize_token(config.api_key, _oauth_token, function(api_key)
-        if not api_key then
-            bhop_log.notify(
-                "Copilot Adapter: Could not authorize your GitHub Copilot token",
-                vim.log.levels.ERROR
-            )
-            return
-        end
         local url = "https://api.githubcopilot.com/chat/completions"
         local body = vim.json.encode {
             model = config.model,
