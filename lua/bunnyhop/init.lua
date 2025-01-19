@@ -211,24 +211,6 @@ local function extract_pred(llm_output)
     return pred
 end
 
--- local function predict()
---     local adapter = require("bunnyhop.adapters." .. M.config.adapter)
---     adapter.complete(create_prompt(), M.config, function(completion_result)
---         -- "Hack" to get around being unable to call vim functions in a callback.
---         vim.schedule(function()
---             local pred = extract_pred(completion_result)
---             globals.pred.line = pred.line
---             globals.pred.column = pred.column
---             globals.pred.file = pred.file
---
---             -- Makes sure to only display the preview mode when in normal mode
---             if vim.api.nvim_get_mode().mode == "n" then
---                 open_preview_win(pred)
---             end
---         end)
---     end)
--- end
-
 local function predict(config, callback)
     local adapter = require("bunnyhop.adapters." .. config.adapter)
     adapter.complete(create_prompt(), config, function(completion_result)
