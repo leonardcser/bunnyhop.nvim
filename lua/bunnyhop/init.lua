@@ -310,6 +310,8 @@ function M.setup(opts)
     -- TODO: Alert user that the config was setup incorrectly and bunnyhop was not initialized.
     if config_ok then
         init()
+    else
+        bhop_log.notify("Error: bunnyhop config was incorrect, not initializing", vim.log.levels.ERROR)
     end
 end
 
