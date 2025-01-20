@@ -2,12 +2,12 @@ describe("Provider Tests", function()
     local providers = {}
     local bhop = require("bunnyhop")
     setup(function()
-        local PROVIDERS_PATH = "./lua/bunnyhop/providers/"
-        for indx, provider_path in
-            pairs(vim.fn.glob(PROVIDERS_PATH .. "*.lua", false, true))
+        local ADAPTERS_PATH = "./lua/bunnyhop/adapters/"
+        for _, provider_path in
+            pairs(vim.fn.glob(ADAPTERS_PATH .. "*.lua", false, true))
         do
             local provider_name = vim.fn.split(vim.fs.basename(provider_path), ".lua")[1]
-            providers[indx] = require("bunnyhop.providers." .. provider_name)
+            providers[provider_name] = require("bunnyhop.adapters." .. provider_name)
         end
         bhop.setup { api_key = "HF_API_KEY" }
     end)
@@ -39,5 +39,24 @@ describe("Provider Tests", function()
                 end
             )
         end
+    end)
+    it("Test process_api_key() Exists", function()
+        for _, provider in pairs(providers) do
+            assert.is_function(provider.process_api_key)
+        end
+    end)
+    it("Test Hugging Face process_api_key()", function()
+        local provider = providers["hugging_face"]
+        provider.process_api_key("HF_API_KEY", function(api_key)
+            assert.is_string(api_key)
+            assert.is_true(api_key:match("hf_+") ~= nil)
+        end)
+    end)
+    it("Test Copilot process_api_key()", function()
+        local provider = providers["copilot"]
+        local api_key = provider.process_api_key("", function(api_key)
+            assert.is_string(api_key)
+            assert.is_true(api_key:match("tid=+") ~= nil)
+        end)
     end)
 end)
