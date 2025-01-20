@@ -54,7 +54,7 @@ describe("Provider Tests", function()
     end)
     it("Test Copilot process_api_key()", function()
         local provider = providers["copilot"]
-        local api_key = provider.process_api_key("", function(api_key)
+        provider.process_api_key("", function(api_key)
             assert.is_string(api_key)
             assert.is_true(api_key:match("tid=+") ~= nil)
         end)
