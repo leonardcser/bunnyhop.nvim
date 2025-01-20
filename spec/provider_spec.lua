@@ -2,12 +2,12 @@ describe("Provider Tests", function()
     local providers = {}
     local bhop = require("bunnyhop")
     setup(function()
-        local PROVIDERS_PATH = "./lua/bunnyhop/providers/"
-        for indx, provider_path in
-            pairs(vim.fn.glob(PROVIDERS_PATH .. "*.lua", false, true))
+        local ADAPTERS_PATH = "./lua/bunnyhop/adapters/"
+        for _, provider_path in
+            pairs(vim.fn.glob(ADAPTERS_PATH .. "*.lua", false, true))
         do
             local provider_name = vim.fn.split(vim.fs.basename(provider_path), ".lua")[1]
-            providers[indx] = require("bunnyhop.providers." .. provider_name)
+            providers[provider_name] = require("bunnyhop.adapters." .. provider_name)
         end
         bhop.setup { api_key = "HF_API_KEY" }
     end)
@@ -27,17 +27,11 @@ describe("Provider Tests", function()
     it("Test complete()", function()
         for _, provider in pairs(providers) do
             assert.is_function(provider.complete)
-            provider.complete(
-                "test prompt, say 'hello there'",
-                bhop.config,
-                -- Looks like busted can't test this callback yet.
-                -- This doesn't make sense as it works fine in the callback in "Test get_models()".
-                -- I suspect it might be because get_models doesn't use neovim's callback functions.
-                function(result)
-                    assert.is_string(result)
-                    assert.is_true(#result > 0)
-                end
-            )
+        end
+    end)
+    it("Test process_api_key() Exists", function()
+        for _, provider in pairs(providers) do
+            assert.is_function(provider.process_api_key)
         end
     end)
 end)
