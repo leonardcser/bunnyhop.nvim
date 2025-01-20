@@ -38,9 +38,8 @@ local function get_github_token()
         return _oauth_token
     end
 
-    local token = os.getenv("GITHUB_TOKEN")
-    local codespaces = os.getenv("CODESPACES")
-    if token and codespaces then
+    local token = os.getenv("GH_TOKEN")
+    if token then
         return token
     end
 
@@ -72,6 +71,7 @@ end
 ---@param callback fun(github_token: string): nil
 ---@return nil
 local function authorize_token(api_key, oauth_token, callback) --luacheck: no unused args
+    -- print("Expires at: ", _expires_at, "OS: " .. os.time())
     if
         api_key ~= nil
         and api_key ~= ""
@@ -187,6 +187,7 @@ function M.complete(prompt, config, callback)
                     callback("")
                     return
                 end
+                -- print(cmd_result.stdout)
                 local response = vim.json.decode(cmd_result.stdout)
                 if response.error ~= nil then
                     bhop_log.notify(
