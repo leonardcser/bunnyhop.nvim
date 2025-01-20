@@ -90,15 +90,14 @@ local function authorize_token(api_key, oauth_token, callback) --luacheck: no un
         "Accept: " .. "application/json",
         "https://api.github.com/copilot_internal/v2/token",
     }, {}, function(result)
-        if result.code ~= 0 then
-            bhop_log.notify(
-                "Copilot Adapter: Token request error %s",
-                result.stderr,
-                vim.log.levels.ERROR
-            )
-            return
-        end
         vim.schedule(function()
+            if result.code ~= 0 then
+                bhop_log.notify(
+                    "Copilot Adapter: Token request error " .. result.stderr,
+                    vim.log.levels.ERROR
+                )
+                return
+            end
             local token = vim.fn.json_decode(result.stdout)
             if not token then
                 bhop_log.notify(
