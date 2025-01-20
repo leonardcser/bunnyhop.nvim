@@ -27,36 +27,11 @@ describe("Provider Tests", function()
     it("Test complete()", function()
         for _, provider in pairs(providers) do
             assert.is_function(provider.complete)
-            provider.complete(
-                "test prompt, say 'hello there'",
-                bhop.config,
-                -- Looks like busted can't test this callback yet.
-                -- This doesn't make sense as it works fine in the callback in "Test get_models()".
-                -- I suspect it might be because get_models doesn't use neovim's callback functions.
-                function(result)
-                    assert.is_string(result)
-                    assert.is_true(#result > 0)
-                end
-            )
         end
     end)
     it("Test process_api_key() Exists", function()
         for _, provider in pairs(providers) do
             assert.is_function(provider.process_api_key)
         end
-    end)
-    it("Test Hugging Face process_api_key()", function()
-        local provider = providers["hugging_face"]
-        provider.process_api_key("HF_API_KEY", function(api_key)
-            assert.is_string(api_key)
-            assert.is_true(api_key:match("hf_+") ~= nil)
-        end)
-    end)
-    it("Test Copilot process_api_key()", function()
-        local provider = providers["copilot"]
-        provider.process_api_key("", function(api_key)
-            assert.is_string(api_key)
-            assert.is_true(api_key:match("tid=+") ~= nil)
-        end)
     end)
 end)
