@@ -238,6 +238,9 @@ local function init()
 
                 -- Makes sure to only display the preview mode when in normal mode
                 if vim.api.nvim_get_mode().mode == "n" then
+                    if globals.preview_win_id ~= globals.DEFAULT_PREVIOUS_WIN_ID then
+                        close_preview_win()
+                    end
                     globals.preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
                 end
             end)
