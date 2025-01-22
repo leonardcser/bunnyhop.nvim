@@ -272,17 +272,10 @@ local function init()
             end
         end,
     })
-    vim.api.nvim_create_autocmd("BufLeave", {
+    vim.api.nvim_create_autocmd({"BufLeave", "InsertEnter"}, {
         group = prev_win_augroup,
         pattern = "*",
-        callback = function()
-            close_preview_win()
-        end,
-    })
-    vim.api.nvim_create_autocmd("InsertEnter", {
-        group = prev_win_augroup,
-        pattern = "*",
-        callback = close_preview_win,
+        callback = close_preview_win
     })
     function M.hop()
         if globals.pred.line == -1 or globals.pred.column == -1 then
