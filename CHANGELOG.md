@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.5.0](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.4.0...v0.5.0) (2025-01-23)
+
+
+### Features
+
+* add cache functionaly to copilot verification function ([400fb95](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/400fb95a9eac3cc7d69773769dc9850ae1c90ca9))
+* remove jumpts and add files to context ([5464f75](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/5464f753b1ed6655596b82b532b383a9a1ec8b84))
+
+
+### Bug Fixes
+
+* change environment variable fetching of get_github_token ([4419966](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/4419966a48589f06695c84637cd9c78293d9b8c7))
+* correct args in notify call and move notify into schedule ([ea14358](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/ea143584627348a736075e45ff143c7ea86571cd))
+* fix callback being called twice in authorize_token ([d14c6fd](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/d14c6fd3cdc4d14b0d83dc1d59c1467c1d1f1ad6))
+* fix linter errors ([8494e9a](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/8494e9aa02896a3f8b16190783461c57055993d2))
+* remove api_key assignment ([569a720](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/569a720035f50879c25126b7e1508f5c91a2c730))
+* remove persistant "Authorizing GitHub Copilot token" notification ([fff3f8a](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/fff3f8ad540f11f77181808f1499f33f54fc13e9))
+* remove unnecessary github token fetch in complete ([cfb9ef4](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/cfb9ef4ff14f995c1a714963ca1c328a9a184ee6))
+* stale/persistent window during rapid prediction ([da851e0](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/da851e042aeac1a76656c3becd064a794ac113a2))
+
 ## [0.4.0](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.3.1...v0.4.0) (2025-01-18)
 
 
