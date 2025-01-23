@@ -46,62 +46,72 @@ local function create_prompt()
     -- lnum -> line_num
     -- bufnr -> buffer_name
     -- col -> column
-    local JUMPLIST_COLUMNS = { "index", "line_num", "column", "buffer_name" }
     local jumplist = vim.fn.getjumplist()[1]
-    local jumplist_csv = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
-    local jumplist_files = {}
+    local visited_files = {}
 
-    for indx, jump_row in pairs(jumplist) do
+    for _, jump_row in pairs(jumplist) do
         local buf_num = jump_row["bufnr"]
-        if vim.fn.bufexists(buf_num) == 1 then
-            local buf_name = vim.api.nvim_buf_get_name(buf_num)
-            if
-                buf_name:match(".git") == nil
-                and buf_name:match(vim.fn.getcwd()) ~= nil
-            then
-                if jumplist_files[buf_num] == nil then
-                    jumplist_files[buf_num] = buf_name
-                end
-                jumplist_csv = jumplist_csv
-                    .. indx
-                    .. ","
-                    .. jump_row["lnum"]
-                    .. ","
-                    .. jump_row["col"]
-                    .. ","
-                    .. buf_name
-                    .. "\n"
-            end
+        if vim.fn.bufexists(buf_num) == 0 then
+            goto continue
         end
+        local buf_name = vim.api.nvim_buf_get_name(buf_num)
+        if
+            #buf_name == 0
+            or buf_name:match(".") == nil
+            or buf_name:match(".git") ~= nil
+            or buf_name:match(vim.fn.getcwd()) == nil
+        then
+            goto continue
+        end
+        if visited_files[buf_num] == nil then
+            visited_files[buf_num] = buf_name
+        end
+        ::continue::
     end
 
     local CHANGELIST_COLUMNS = { "index", "line_num", "column" }
     local CHANGELIST_MAX_SIZE = 20
-    local changelists = ""
-    for buf_num, buf_name in pairs(jumplist_files) do
+    local context = ""
+    for buf_num, buf_name in pairs(visited_files) do
+        local file_content = ""
+        local file = io.open(buf_name, "r")
+        if file == nil then
+            bhop_log.notify("Wasn't able to open " .. buf_name, vim.log.levels.DEBUG)
+        else
+            file_content = file:read("*a")
+            file:close()
+        end
+
         local changelist_csv = ""
         local changelist = vim.fn.getchangelist(buf_num)[1]
         local changelist_start = vim.fn.max { 1, #changelist - CHANGELIST_MAX_SIZE }
         changelist = vim.fn.slice(changelist, changelist_start, #changelist)
-        if #changelist ~= 0 then
-            for indx, change_row in pairs(changelist) do
-                changelist_csv = changelist_csv
-                    .. indx
-                    .. ","
-                    .. change_row["lnum"]
-                    .. ","
-                    .. change_row["col"]
-                    .. "\n"
-            end
-            changelists = changelists
-                .. "# Change history of buffer "
-                .. buf_name
-                .. "\n"
-                .. table.concat(CHANGELIST_COLUMNS, ",")
-                .. "\n"
-                .. changelist_csv
+        if #changelist == 0 then
+            goto continue
+        end
+        for indx, change_row in pairs(changelist) do
+            changelist_csv = changelist_csv
+                .. indx
+                .. ","
+                .. change_row["lnum"]
+                .. ","
+                .. change_row["col"]
                 .. "\n"
         end
+        context = context
+            .. buf_name
+            .. "\n"
+            .. "## Buffer content"
+            .. "\n"
+            .. file_content
+            .. "\n"
+            .. "## Change history of buffer "
+            .. "\n"
+            .. table.concat(CHANGELIST_COLUMNS, ",")
+            .. "\n"
+            .. changelist_csv
+            .. "\n"
+        ::continue::
     end
 
     local prompt = "Predict next cursor position based on the following information.\n"
@@ -112,8 +122,7 @@ local function create_prompt()
         .. "'buffer_name' should be the name of the file the cursor should be on next\n"
         .. "DO NOT HALLUCINATE!\n" -- for the memes
         .. "# History of Cursor Jumps\n"
-        .. jumplist_csv
-        .. changelists
+        .. context
 
     return prompt
 end
@@ -272,17 +281,10 @@ local function init()
             end
         end,
     })
-    vim.api.nvim_create_autocmd("BufLeave", {
+    vim.api.nvim_create_autocmd({"BufLeave", "InsertEnter"}, {
         group = prev_win_augroup,
         pattern = "*",
-        callback = function()
-            close_preview_win()
-        end,
-    })
-    vim.api.nvim_create_autocmd("InsertEnter", {
-        group = prev_win_augroup,
-        pattern = "*",
-        callback = close_preview_win,
+        callback = close_preview_win
     })
     function M.hop()
         if globals.pred.line == -1 or globals.pred.column == -1 then
