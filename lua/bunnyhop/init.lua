@@ -48,31 +48,26 @@ local function create_prompt()
     -- col -> column
     local JUMPLIST_COLUMNS = { "index", "line_num", "column", "buffer_name" }
     local jumplist = vim.fn.getjumplist()[1]
-    local jumplist_csv = table.concat(JUMPLIST_COLUMNS, ",") .. "\n"
-    local jumplist_files = {}
+    local visited_files = {}
 
     for indx, jump_row in pairs(jumplist) do
         local buf_num = jump_row["bufnr"]
-        if vim.fn.bufexists(buf_num) == 1 then
-            local buf_name = vim.api.nvim_buf_get_name(buf_num)
-            if
-                buf_name:match(".git") == nil
-                and buf_name:match(vim.fn.getcwd()) ~= nil
-            then
-                if jumplist_files[buf_num] == nil then
-                    jumplist_files[buf_num] = buf_name
-                end
-                jumplist_csv = jumplist_csv
-                    .. indx
-                    .. ","
-                    .. jump_row["lnum"]
-                    .. ","
-                    .. jump_row["col"]
-                    .. ","
-                    .. buf_name
-                    .. "\n"
-            end
+        if vim.fn.bufexists(buf_num) == 0 then
+            goto continue
         end
+        local buf_name = vim.api.nvim_buf_get_name(buf_num)
+        if
+            #buf_name == 0
+            or buf_name:match(".") == nil
+            or buf_name:match(".git") ~= nil
+            or buf_name:match(vim.fn.getcwd()) == nil
+        then
+            goto continue
+        end
+        if visited_files[buf_num] == nil then
+            visited_files[buf_num] = buf_name
+        end
+        ::continue::
     end
 
     local CHANGELIST_COLUMNS = { "index", "line_num", "column" }
