@@ -46,11 +46,10 @@ local function create_prompt()
     -- lnum -> line_num
     -- bufnr -> buffer_name
     -- col -> column
-    local JUMPLIST_COLUMNS = { "index", "line_num", "column", "buffer_name" }
     local jumplist = vim.fn.getjumplist()[1]
     local visited_files = {}
 
-    for indx, jump_row in pairs(jumplist) do
+    for _, jump_row in pairs(jumplist) do
         local buf_num = jump_row["bufnr"]
         if vim.fn.bufexists(buf_num) == 0 then
             goto continue
