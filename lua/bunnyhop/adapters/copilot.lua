@@ -72,9 +72,7 @@ end
 ---@return nil
 local function authorize_token(api_key, oauth_token, callback) --luacheck: no unused args
     if
-        api_key ~= nil
-        and api_key ~= ""
-        and _expires_at ~= nil
+        _expires_at ~= nil
         and _expires_at > os.time()
     then
         callback(api_key)
