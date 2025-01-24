@@ -71,11 +71,8 @@ end
 ---@param callback fun(github_token: string): nil
 ---@return nil
 local function authorize_token(api_key, oauth_token, callback) --luacheck: no unused args
-    -- print("Expires at: ", _expires_at, "OS: " .. os.time())
     if
-        api_key ~= nil
-        and api_key ~= ""
-        and _expires_at ~= nil
+        _expires_at ~= nil
         and _expires_at > os.time()
     then
         callback(api_key)
@@ -106,7 +103,9 @@ local function authorize_token(api_key, oauth_token, callback) --luacheck: no un
                 )
                 return
             end
-            _expires_at = token.expires_at
+            local MINUTE_IN_SECS = 60
+            local MINUTES_TO_EXPIRATION_EST = 20
+            _expires_at = os.time() + MINUTES_TO_EXPIRATION_EST * MINUTE_IN_SECS
             callback(token["token"])
         end)
     end)
@@ -186,7 +185,6 @@ function M.complete(prompt, config, callback)
                     callback("")
                     return
                 end
-                -- print(cmd_result.stdout)
                 local response = vim.json.decode(cmd_result.stdout)
                 if response.error ~= nil then
                     bhop_log.notify(
