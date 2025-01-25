@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.1](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.5.0...v0.5.1) (2025-01-25)
+
+
+### Bug Fixes
+
+* fix buffer is invalid when going to telescope result ([3f794d7](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/3f794d7bcc4220cc4cab2033756038e6fbc2f787))
+* fix copilot expired token error ([2dd8556](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/2dd8556a4b8658f67b2ee9f422d05d1a063a3072))
+* handle nil file_content ([ba9bb88](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/ba9bb880ba8260713deb0345fa55b06ee9b8f024))
+
 ## [0.5.0](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.4.0...v0.5.0) (2025-01-23)
 
 
