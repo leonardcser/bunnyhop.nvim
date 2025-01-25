@@ -80,6 +80,9 @@ local function create_prompt()
         else
             file_content = file:read("*a")
             file:close()
+            if file_content == nil then
+                file_content = ""
+            end
         end
 
         local changelist_csv = ""
