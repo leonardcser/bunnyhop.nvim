@@ -22,12 +22,15 @@ local globals = {
     DEFAULT_PRED_COLUMN = 1,
     DEFAULT_PRED_FILE = "%",
 }
+---@class bhop.Prediction
 globals.pred = {
     line = globals.DEFAULT_PRED_LINE,
     column = globals.DEFAULT_PRED_COLUMN,
     file = globals.DEFAULT_PRED_FILE,
 }
+---@type number
 globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
+---@type number
 globals.action_counter = globals.DEFAULT_ACTION_COUNTER
 
 local function close_preview_win()
@@ -40,6 +43,8 @@ local function close_preview_win()
     globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
 end
 
+---Creates prompt
+---@return string
 local function create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
@@ -130,10 +135,18 @@ local function create_prompt()
     return prompt
 end
 
+---Gets the line of a given buffer
+---@param buf_num number
+---@param line_num number
+---@return string
 local function buf_get_line(buf_num, line_num)
     return vim.api.nvim_buf_get_lines(buf_num, line_num - 1, line_num, true)[1]
 end
 
+---Opens preview window and returns the window's ID.
+---@param prediction bhop.Prediction
+---@param max_prev_width number
+---@return integer
 local function open_preview_win(prediction, max_prev_width) --luacheck: no unused args
     local buf_num = vim.fn.bufnr(prediction.file)
     if vim.fn.bufexists(buf_num) == 0 then
@@ -141,7 +154,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
             "Buffer number: " .. buf_num .. " doesn't exist",
             vim.log.levels.WARN
         )
-        return
+        return -1
     end
     if prediction.file == "%" then
         prediction.file = vim.api.nvim_buf_get_name(0)
@@ -187,6 +200,11 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
     return id
 end
 
+---Clips given number to given range
+---@param num number
+---@param min number
+---@param max number
+---@return number
 local function clip_number(num, min, max)
     if min > max or num < min then
         return min
@@ -196,6 +214,9 @@ local function clip_number(num, min, max)
     return num
 end
 
+---Preprocess prediction result returned by the llm.
+---@param llm_output string
+---@return bhop.Prediction
 local function extract_pred(llm_output)
     local success, pred_str = pcall(vim.json.decode, llm_output)
     local pred = {
@@ -232,6 +253,9 @@ local function extract_pred(llm_output)
     return pred
 end
 
+---Predicts the next cursor position.
+---@param config bhop.Opts
+---@param callback fun(completion_result: bhop.Prediction)
 local function predict(config, callback)
     local adapter = require("bunnyhop.adapters." .. config.adapter)
     adapter.complete(create_prompt(), config, function(completion_result)
@@ -240,8 +264,10 @@ local function predict(config, callback)
     end)
 end
 
+---Hops to prediction.
 function M.hop() end
 
+--- Initializes all the autocommands and hop function.
 local function init()
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
         group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
@@ -275,10 +301,6 @@ local function init()
         group = prev_win_augroup,
         pattern = "*",
         callback = function()
-            -- This should be enough to move the preview window around and not require closing it in open_preview_win.
-            -- Currently, the behavior is as follows:
-            -- The window opens when going into normal mode, when the cursor is moved, the first window lingers but then the following windows work as expected.
-            -- The question I need to find the answer to is why does the first window linger? shouldn't it move just like the following ones do?
             if globals.preview_win_id < 0 then
                 return
             end
