@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.6.0](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.5.1...v0.6.0) (2025-01-26)
+
+
+### Features
+
+* add column focus in preview window ([8c3baa9](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/8c3baa9787ace3effb0ffbea2531faf6de5ead2b))
+
+
+### Bug Fixes
+
+* fix highlight alignment ([baada08](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/baada08f0d315ed4c7a742477d4be9be420ffe41))
+* fix highlight missalignment ([dc3576d](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/dc3576de7b4d9664044a651bcbc27c31aea1ca71))
+* fix invalid buf check ([d9fd158](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/d9fd158d745931db209a9275b94b0c245c1f3686))
+* fix predicted column clipping ([a285bb3](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/a285bb31a31b209eee4eebcc13f4f20633f84d05))
+* reduce estimated expiration time by half ([0bbd1c8](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/0bbd1c8a2d18db80bcc03cb4f4f12ac683a974de))
+* reduce expiration time estimate to 5 minutes ([b984733](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/b9847332f9f40dcfb624a22c3d0a90658ec6aedd))
+* return -1 on non existant buffer open_preview_win ([1617bcb](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/1617bcb16e9c7e8955deb3b698adbaf91587b91c))
+
 ## [0.5.1](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.5.0...v0.5.1) (2025-01-25)
 
 
