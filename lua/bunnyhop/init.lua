@@ -143,37 +143,45 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
         )
         return
     end
-
     if prediction.file == "%" then
         prediction.file = vim.api.nvim_buf_get_name(0)
     end
 
+    local preview_win_title = vim.fs.basename(prediction.file) .. " : " .. prediction.line
     local pred_line_content = buf_get_line(buf_num, prediction.line)
-    pred_line_content = pred_line_content:gsub("^%s+", "")
+    local preview_win_width = vim.fn.max {
+        1,
+        vim.fn.min {
+            max_prev_width,
+            vim.fn.max {
+                #pred_line_content,
+                #preview_win_title,
+            },
+        },
+    }
+    local half_preview_win_width = math.floor(preview_win_width/2)
+    if half_preview_win_width < prediction.column and preview_win_width < #pred_line_content then
+        pred_line_content = string.sub(
+            pred_line_content,
+            (prediction.column - half_preview_win_width),
+            -1
+        )
+    end
 
-    -- Opens preview window.
-    -- Closing the existing preview window if it exist to make space for the newly created window.
     local buf = vim.api.nvim_create_buf(false, true)
-    local prev_win_title = vim.fs.basename(prediction.file) .. " : " .. prediction.line
-    vim.api.nvim_buf_set_lines(buf, 0, -1, false, { pred_line_content })
+    vim.api.nvim_buf_set_lines(buf, 0, 1, false, { pred_line_content })
+    local namespace = vim.api.nvim_create_namespace("test")
+    local byte_col = vim.str_byteindex(pred_line_content, vim.fn.min {prediction.column, half_preview_win_width})
+    vim.api.nvim_buf_add_highlight(buf, namespace, "Cursor", 0, byte_col, byte_col + 1)
     local id =  vim.api.nvim_open_win(buf, false, {
         relative = "cursor",
         row = 1,
         col = 0,
-        width = vim.fn.max {
-            1,
-            vim.fn.min {
-                max_prev_width,
-                vim.fn.max {
-                    #pred_line_content,
-                    #prev_win_title,
-                },
-            },
-        },
+        width = preview_win_width,
         height = 1,
         style = "minimal",
         border = "single",
-        title = prev_win_title,
+        title = preview_win_title,
     })
     return id
 end
@@ -216,7 +224,7 @@ local function extract_pred(llm_output)
         else
             local pred_line_content =
                 buf_get_line(pred_buf_num, pred.line):gsub("^%s+", "")
-            pred.column = clip_number(pred.column, 1, #pred_line_content)
+            pred.column = clip_number(pred.column, 1, #pred_line_content - 1)
         end
     end
 
