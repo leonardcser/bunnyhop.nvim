@@ -141,7 +141,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
             "Buffer number: " .. buf_num .. " doesn't exist",
             vim.log.levels.WARN
         )
-        return
+        return -1
     end
     if prediction.file == "%" then
         prediction.file = vim.api.nvim_buf_get_name(0)
