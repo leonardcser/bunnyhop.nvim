@@ -1,9 +1,13 @@
 local bhop_log = require("bunnyhop.log")
 local M = {}
 
+local MINUTE_IN_SECS = 60
+local MINUTES_TO_EXPIRATION_EST = 10
+
 ---@type string|nil
 local _oauth_token
 local _expires_at
+
 
 --- Finds the configuration path
 local function find_config_path()
@@ -103,8 +107,6 @@ local function authorize_token(api_key, oauth_token, callback) --luacheck: no un
                 )
                 return
             end
-            local MINUTE_IN_SECS = 60
-            local MINUTES_TO_EXPIRATION_EST = 20
             _expires_at = os.time() + MINUTES_TO_EXPIRATION_EST * MINUTE_IN_SECS
             callback(token["token"])
         end)
