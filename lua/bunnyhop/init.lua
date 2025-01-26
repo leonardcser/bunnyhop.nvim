@@ -172,7 +172,8 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
     vim.api.nvim_buf_set_lines(buf, 0, 1, false, { pred_line_content })
     local namespace = vim.api.nvim_create_namespace("test")
     local byte_col = vim.str_byteindex(pred_line_content, vim.fn.min {prediction.column, half_preview_win_width})
-    vim.api.nvim_buf_add_highlight(buf, namespace, "Cursor", 0, byte_col, byte_col + 1)
+    ---@diagnostic disable-next-line: param-type-mismatch
+    vim.api.nvim_buf_add_highlight(buf, namespace, "Cursor", 0, byte_col - 1, byte_col)
     local id =  vim.api.nvim_open_win(buf, false, {
         relative = "cursor",
         row = 1,
@@ -222,9 +223,9 @@ local function extract_pred(llm_output)
         if type(pred.column) ~= "number" then
             pred.column = globals.DEFAULT_PRED_COLUMN
         else
-            local pred_line_content =
-                buf_get_line(pred_buf_num, pred.line):gsub("^%s+", "")
-            pred.column = clip_number(pred.column, 1, #pred_line_content - 1)
+            local pred_line_content = buf_get_line(pred_buf_num, pred.line)
+            local white_space_ammount = #pred_line_content - #pred_line_content:gsub("^%s+", "")
+            pred.column = clip_number(pred.column, white_space_ammount + 1, #pred_line_content - 1)
         end
     end
 
