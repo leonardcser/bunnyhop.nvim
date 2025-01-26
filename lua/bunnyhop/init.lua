@@ -223,9 +223,9 @@ local function extract_pred(llm_output)
         if type(pred.column) ~= "number" then
             pred.column = globals.DEFAULT_PRED_COLUMN
         else
-            local pred_line_content =
-                buf_get_line(pred_buf_num, pred.line):gsub("^%s+", "")
-            pred.column = clip_number(pred.column, 1, #pred_line_content - 1)
+            local pred_line_content = buf_get_line(pred_buf_num, pred.line)
+            local white_space_ammount = #pred_line_content - #pred_line_content:gsub("^%s+", "")
+            pred.column = clip_number(pred.column, white_space_ammount + 1, #pred_line_content - 1)
         end
     end
 
