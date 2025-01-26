@@ -301,10 +301,6 @@ local function init()
         group = prev_win_augroup,
         pattern = "*",
         callback = function()
-            -- This should be enough to move the preview window around and not require closing it in open_preview_win.
-            -- Currently, the behavior is as follows:
-            -- The window opens when going into normal mode, when the cursor is moved, the first window lingers but then the following windows work as expected.
-            -- The question I need to find the answer to is why does the first window linger? shouldn't it move just like the following ones do?
             if globals.preview_win_id < 0 then
                 return
             end
