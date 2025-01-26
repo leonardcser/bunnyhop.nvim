@@ -2,7 +2,7 @@ local bhop_log = require("bunnyhop.log")
 local M = {}
 
 local MINUTE_IN_SECS = 60
-local MINUTES_TO_EXPIRATION_EST = 10
+local MINUTES_TO_EXPIRATION_EST = 5
 
 ---@type string|nil
 local _oauth_token
