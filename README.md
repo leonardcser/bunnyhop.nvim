@@ -50,7 +50,7 @@ Bunnyhop is configured via the setup() function. The default configuration value
 
 ## Development
 
-### Run Tests Locally
+### Run tests
 
 
 Running tests requires either
@@ -59,9 +59,8 @@ Running tests requires either
 - or [busted][busted] and [nlua][nlua]
 
 to be installed[^1].
-
-[^1]: The test suite assumes that `nlua` has been installed
-      using luarocks into `~/.luarocks/bin/`.
+[^1]: The test suite assumes that `nlua` has
+      been added to the PATH.
 
 You can then run:
 
@@ -79,18 +78,34 @@ luarocks test spec/path_to_file.lua --local
 busted spec/path_to_file.lua
 ```
 
-## Common Errors with Local Testing
+### Common Errors
 
-> [!Note]
-> For The local testing to work you need to have Lua 5.1 set as your default version for luarocks.
-> If that's not the case you can pass `--lua-version 5.1` to all the luarocks commands above.
+If you encounter the `module 'busted.runner' not found`
+or `pl.path requires LuaFileSystem` errors, fix it by
+runing the following command the following command:
 
-1. If you see an error like `module 'busted.runner' not found` run the following command:
-
-This sets the correct luarocks path.
 ```bash
 eval $(luarocks path --no-bin)
 ```
+
+If you encounter `sh: nlua: command not found` error the error above occurs do[^1]:
+
+#### Linux/Max
+
+Run the following command:
+```bash
+export PATH=$PATH:~/.luarocks/bin
+```
+
+#### Windows
+
+See the following guide to a variable to the PATH: [add to PATH][add-env-vars-windows].
+
+> [!Note]
+> For local testing to work you need to have Lua 5.1 set as your default version for
+> luarocks. If that's not the case you can pass `--lua-version 5.1` to all the
+> luarocks commands above, or set lua version 5.1 globally by running
+> `luarocks config --scope system lua_version 5.1`.
 
 [rockspec-format]: https://github.com/luarocks/luarocks/wiki/Rockspec-format
 [luarocks]: https://luarocks.org
@@ -99,3 +114,4 @@ eval $(luarocks path --no-bin)
 [busted]: https://lunarmodules.github.io/busted/
 [nlua]: https://github.com/mfussenegger/nlua
 [use-this-template]: https://github.com/new?template_name=nvim-lua-plugin-template&template_owner=nvim-lua
+[add-env-vars-windows]: https://answers.microsoft.com/en-us/windows/forum/all/adding-path-variable/97300613-20cb-4d85-8d0e-cc9d3549ba23
