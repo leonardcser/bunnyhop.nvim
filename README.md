@@ -11,7 +11,7 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
 
 #### Predicts your next desired cursor position a preview window, allowing you to hop to it via your chosen keybinding.
 
-![bunnyhop_feature_1](https://github.com/user-attachments/assets/9d9be27e-c8b7-4d02-9c64-4ba7a860f922)
+![bhop_feat_1](https://github.com/user-attachments/assets/2d25d126-ce59-4566-a5ee-6eaa78390dd0)
 
 ## Installation
 
