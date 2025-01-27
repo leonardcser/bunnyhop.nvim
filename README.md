@@ -107,6 +107,11 @@ See the following guide to a variable to the PATH: [add to PATH][add-env-vars-wi
 > luarocks commands above, or set lua version 5.1 globally by running
 > `luarocks config --scope system lua_version 5.1`.
 
+
+## Acknowledgments
+- Thank you [Oli Morris](https://github.com/olimorris) for encoraging me to make to plugin.
+- [Cursor](https://github.com/getcursor/cursor) for the inspiration for this plugin.
+
 [rockspec-format]: https://github.com/luarocks/luarocks/wiki/Rockspec-format
 [luarocks]: https://luarocks.org
 [luarocks-api-key]: https://luarocks.org/settings/api-keys
