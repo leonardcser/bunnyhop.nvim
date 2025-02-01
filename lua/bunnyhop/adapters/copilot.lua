@@ -1,9 +1,6 @@
 local bhop_log = require("bunnyhop.log")
 local M = {}
 
-local MINUTE_IN_SECS = 60
-local MINUTES_TO_EXPIRATION_EST = 2
-
 ---@type string|nil
 local _oauth_token
 local _expires_at
@@ -119,7 +116,7 @@ end
 ---If an error occurs, the function returns nil and if it was successful, it returns the api_key.
 ---@param callback fun(api_key: string | nil): nil Function that gets called after the request is made.
 ---@return nil
-function M.process_api_key(callback)
+function M.process_api_key(callback) --luacheck: no unused args
     _oauth_token = get_github_token()
     if not _oauth_token then
         bhop_log.notify(
