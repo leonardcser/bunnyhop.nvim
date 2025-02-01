@@ -7,6 +7,7 @@ local MINUTES_TO_EXPIRATION_EST = 2
 ---@type string|nil
 local _oauth_token
 local _expires_at
+local _api_key
 
 
 --- Finds the configuration path
@@ -74,19 +75,19 @@ end
 ---Authorize the GitHub OAuth token
 ---@param callback fun(github_token: string): nil
 ---@return nil
-local function authorize_token(api_key, oauth_token, callback) --luacheck: no unused args
+local function authorize_token(callback)
     if
         _expires_at ~= nil
         and _expires_at > os.time()
     then
-        callback(api_key)
+        callback(_api_key)
         return
     end
 
     vim.system({
         "curl",
         "-H",
-        "Authorization: Bearer " .. oauth_token,
+        "Authorization: Bearer " .. _oauth_token,
         "-H",
         "Accept: " .. "application/json",
         "https://api.github.com/copilot_internal/v2/token",
@@ -107,7 +108,8 @@ local function authorize_token(api_key, oauth_token, callback) --luacheck: no un
                 )
                 return
             end
-            _expires_at = os.time() + MINUTES_TO_EXPIRATION_EST * MINUTE_IN_SECS
+            _expires_at = token["expires_at"]
+            _api_key = token["token"]
             callback(token["token"])
         end)
     end)
@@ -115,10 +117,9 @@ end
 
 ---Processes the given api_key for the Hugging Face provider.
 ---If an error occurs, the function returns nil and if it was successful, it returns the api_key.
----@param api_key string
 ---@param callback fun(api_key: string | nil): nil Function that gets called after the request is made.
 ---@return nil
-function M.process_api_key(api_key, callback)
+function M.process_api_key(callback)
     _oauth_token = get_github_token()
     if not _oauth_token then
         bhop_log.notify(
@@ -127,8 +128,6 @@ function M.process_api_key(api_key, callback)
         )
         return
     end
-
-    authorize_token(api_key, _oauth_token, callback)
 end
 
 ---Gets the available models to use.
@@ -151,7 +150,7 @@ end
 ---@param callback fun(completion_result: string): nil Function that gets called after the request is made.
 ---@return nil
 function M.complete(prompt, config, callback)
-    authorize_token(config.api_key, _oauth_token, function(api_key)
+    authorize_token(function(api_key)
         local url = "https://api.githubcopilot.com/chat/completions"
         local body = vim.json.encode {
             model = config.model,
@@ -177,7 +176,7 @@ function M.complete(prompt, config, callback)
                 .. "."
                 .. vim.version().patch,
             "-H",
-            "Authorization: Bearer " .. api_key,
+            "Authorization: Bearer " .. _api_key,
             "-d",
             body,
             url,
