@@ -79,7 +79,7 @@ local function authorize_token(callback)
         _expires_at ~= nil
         and _expires_at > os.time()
     then
-        callback(_api_key)
+        callback()
         return
     end
 
@@ -109,7 +109,7 @@ local function authorize_token(callback)
             end
             _expires_at = token["expires_at"]
             _api_key = token["token"]
-            callback(token["token"])
+            callback()
         end)
     end)
 end
@@ -149,7 +149,7 @@ end
 ---@param callback fun(completion_result: string): nil Function that gets called after the request is made.
 ---@return nil
 function M.complete(prompt, config, callback)
-    authorize_token(function(api_key)
+    authorize_token(function()
         local url = "https://api.githubcopilot.com/chat/completions"
         local body = vim.json.encode {
             model = config.model,
