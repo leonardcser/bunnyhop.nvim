@@ -3,7 +3,9 @@ local M = {}
 
 ---@type string|nil
 local _oauth_token
+---@type number|nil
 local _expires_at
+---@type string|nil
 local _api_key
 
 
