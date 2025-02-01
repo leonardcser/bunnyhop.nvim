@@ -187,7 +187,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
     local byte_col = vim.str_byteindex(pred_line_content, vim.fn.min {prediction.column - 1, half_preview_win_width})
     ---@diagnostic disable-next-line: param-type-mismatch
     vim.api.nvim_buf_add_highlight(buf, namespace, "Cursor", 0, byte_col, byte_col + 1)
-    local id =  vim.api.nvim_open_win(buf, false, {
+    local id = vim.api.nvim_open_win(buf, false, {
         relative = "cursor",
         row = 1,
         col = 0,
