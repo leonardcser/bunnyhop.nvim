@@ -28,7 +28,7 @@ Example Callback Input(aka function output):
 ```lua
 ---Gets the available models to use.
 ---@param config bhop.Opts User config. Used to get the api_key for now, mabye more things later.
----@param callback function Function that gets called after the request is made.
+---@param callback fun(models: string[]): nil Function that gets called after the request is made.
 ---@return nil
 local function get_models(callback)
 end
@@ -42,9 +42,10 @@ Example Callback Input:
 ---Completes the given prompt.
 ---@param prompt string Input prompt.
 ---@param config bhop.Opts User config. Used to get the api_key for now, mabye more things later.
----@param callback function Function that gets called after the request is made.
+---@param callback fun(completion_result: string): nil Function that gets called after the request is made.
 ---@return nil
-function M.complete(prompt, config, callback)
+local function complete(prompt, config, callback)
+end
 ```
 Example Callback Input:
 ```lua
