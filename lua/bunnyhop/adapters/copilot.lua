@@ -72,7 +72,7 @@ local function get_github_token()
 end
 
 ---Authorize the GitHub OAuth token
----@param callback fun(github_token: string): nil
+---@param callback fun(): nil
 ---@return nil
 local function authorize_token(callback)
     if
