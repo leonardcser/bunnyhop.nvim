@@ -139,7 +139,7 @@ function M.get_models(config, callback) --luacheck: no unused args
         "claude-3.5-sonnet",
         "o1-2024-12-17",
         "o1-mini-2024-09-12",
-        "03-mini",
+        "03-mini-2025-01-31",
     }
 end
 
