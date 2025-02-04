@@ -9,6 +9,11 @@
 
 ---Prediction data used by the predict and hop functions.
 ---@class bhop.Prediction
----@field file string
+---@field config bhop.Opts
+---@field adapter "hugging_face" | "copilot"
+---@field DEFAULT_PRED_LINE number
+---@field DEFAULT_PRED_COLUMN number
+---@field DEFAULT_PRED_FILE string
 ---@field line number
 ---@field column number
+---@field file string
