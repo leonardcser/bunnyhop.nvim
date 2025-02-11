@@ -1,6 +1,23 @@
 local bhop_log = require("bunnyhop.log")
-local M = {}
+local bhop_pred = require("bunnyhop.prediction")
+local bhop_adapter = {
+    process_api_key = function(api_key, callback) end, --luacheck: no unused args
+    get_models = function(config, callback) end, --luacheck: no unused args
+    complete = function(prompt, config, callback) end, --luacheck: no unused args
+}
 
+local globals = {
+    DEFAULT_PREVIOUS_WIN_ID = -1,
+    DEFAULT_ACTION_COUNTER = 0,
+}
+---@type number
+globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
+---@type number
+globals.action_counter = globals.DEFAULT_ACTION_COUNTER
+---@type bhop.Prediction
+globals.pred = vim.fn.deepcopy(bhop_pred.default_prediction)
+
+local M = {}
 -- The default config, gets overriden with user config options as needed.
 ---@class bhop.Opts
 M.config = {
@@ -15,23 +32,6 @@ M.config = {
     -- Here for if you want to make the preview window bigger/smaller.
     max_prev_width = 20,
 }
-local globals = {
-    DEFAULT_PREVIOUS_WIN_ID = -1,
-    DEFAULT_ACTION_COUNTER = 0,
-    DEFAULT_PRED_LINE = 1,
-    DEFAULT_PRED_COLUMN = 1,
-    DEFAULT_PRED_FILE = "%",
-}
----@class bhop.Prediction
-globals.pred = {
-    line = globals.DEFAULT_PRED_LINE,
-    column = globals.DEFAULT_PRED_COLUMN,
-    file = globals.DEFAULT_PRED_FILE,
-}
----@type number
-globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
----@type number
-globals.action_counter = globals.DEFAULT_ACTION_COUNTER
 
 local function close_preview_win()
     if globals.preview_win_id < 0 then
@@ -41,106 +41,6 @@ local function close_preview_win()
     vim.api.nvim_win_close(globals.preview_win_id, false)
     globals.action_counter = globals.DEFAULT_ACTION_COUNTER
     globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
-end
-
----Creates prompt
----@return string
-local function create_prompt()
-    -- Dict keys to column name convertor
-    -- index (index of the table, 1 to n)
-    -- lnum -> line_num
-    -- bufnr -> buffer_name
-    -- col -> column
-    local jumplist = vim.fn.getjumplist()[1]
-    local visited_files = {}
-
-    for _, jump_row in pairs(jumplist) do
-        local buf_num = jump_row["bufnr"]
-        if vim.fn.bufexists(buf_num) == 0 or vim.api.nvim_buf_is_valid(buf_num) == false then
-            goto continue
-        end
-        local buf_name = vim.api.nvim_buf_get_name(buf_num)
-        if
-            #buf_name == 0
-            or buf_name:match(".") == nil
-            or buf_name:match(".git") ~= nil
-            or buf_name:match(vim.fn.getcwd()) == nil
-        then
-            goto continue
-        end
-        if visited_files[buf_num] == nil then
-            visited_files[buf_num] = buf_name
-        end
-        ::continue::
-    end
-
-    local CHANGELIST_COLUMNS = { "index", "line_num", "column" }
-    local CHANGELIST_MAX_SIZE = 20
-    local context = ""
-    for buf_num, buf_name in pairs(visited_files) do
-        local file_content = ""
-        local file = io.open(buf_name, "r")
-        if file == nil then
-            bhop_log.notify("Wasn't able to open " .. buf_name, vim.log.levels.DEBUG)
-        else
-            file_content = file:read("*a")
-            file:close()
-            if file_content == nil then
-                file_content = ""
-            end
-        end
-
-        local changelist_csv = ""
-        local changelist = vim.fn.getchangelist(buf_num)[1]
-        local changelist_start = vim.fn.max { 1, #changelist - CHANGELIST_MAX_SIZE }
-        changelist = vim.fn.slice(changelist, changelist_start, #changelist)
-        if #changelist == 0 then
-            goto continue
-        end
-        for indx, change_row in pairs(changelist) do
-            changelist_csv = changelist_csv
-                .. indx
-                .. ","
-                .. change_row["lnum"]
-                .. ","
-                .. change_row["col"]
-                .. "\n"
-        end
-        context = context
-            .. buf_name
-            .. "\n"
-            .. "## Buffer content"
-            .. "\n"
-            .. file_content
-            .. "\n"
-            .. "## Change history of buffer "
-            .. "\n"
-            .. table.concat(CHANGELIST_COLUMNS, ",")
-            .. "\n"
-            .. changelist_csv
-            .. "\n"
-        ::continue::
-    end
-
-    local prompt = "Predict next cursor position based on the following information.\n"
-        .. "ONLY output the following format:\n"
-        .. '[line_num, column, "buffer_name"].\n'
-        .. "'line_num' is the line number the cursor should be on next\n"
-        .. "'column' is the column the cursor should be on next\n"
-        .. "'buffer_name' should be the name of the file the cursor should be on next\n"
-        .. "DO NOT HALLUCINATE!\n" -- for the memes
-        .. "# History of Cursor Jumps\n"
-        .. context
-
-    return prompt
-end
-
----Gets the line of a given buffer
----@param buf_num number
----@param line_num number
----@return string
-local function buf_get_line(buf_num, line_num)
-    return vim.api.nvim_buf_get_lines(buf_num, line_num - 1, line_num, true)[1]
 end
 
 ---Opens preview window and returns the window's ID.
@@ -161,7 +61,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
     end
 
     local preview_win_title = vim.fs.basename(prediction.file) .. " : " .. prediction.line
-    local pred_line_content = buf_get_line(buf_num, prediction.line)
+    local pred_line_content = vim.api.nvim_buf_get_lines(buf_num, prediction.line - 1, prediction.line, true)[1]
     local preview_win_width = vim.fn.max {
         1,
         vim.fn.min {
@@ -183,7 +83,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
 
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf, 0, 1, false, { pred_line_content })
-    local namespace = vim.api.nvim_create_namespace("test")
+    local namespace = vim.api.nvim_create_namespace("test") -- TODO: check if removing namespace creation helps.
     local byte_col = vim.str_byteindex(pred_line_content, vim.fn.min {prediction.column - 1, half_preview_win_width})
     ---@diagnostic disable-next-line: param-type-mismatch
     vim.api.nvim_buf_add_highlight(buf, namespace, "Cursor", 0, byte_col, byte_col + 1)
@@ -200,71 +100,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
     return id
 end
 
----Clips given number to given range
----@param num number
----@param min number
----@param max number
----@return number
-local function clip_number(num, min, max)
-    if min > max or num < min then
-        return min
-    elseif num > max then
-        return max
-    end
-    return num
-end
-
----Preprocess prediction result returned by the llm.
----@param llm_output string
----@return bhop.Prediction
-local function extract_pred(llm_output)
-    local success, pred_str = pcall(vim.json.decode, llm_output)
-    local pred = {
-        file = globals.DEFAULT_PRED_FILE,
-        line = globals.DEFAULT_PRED_LINE,
-        column = globals.DEFAULT_PRED_COLUMN,
-    }
-    if success == true then
-        pred.file = pred_str[3]
-        if #pred.file == 0 or vim.fn.filereadable(pred.file) == 0 then
-            pred.file = globals.DEFAULT_PRED_FILE
-        end
-        local pred_buf_num = vim.fn.bufadd(pred.file)
-        vim.fn.bufload(pred_buf_num)
-
-        pred.line = pred_str[1]
-        if type(pred.line) ~= "number" then
-            pred.line = globals.DEFAULT_PRED_LINE
-        else
-            pred.line =
-                clip_number(pred.line, 1, vim.api.nvim_buf_line_count(pred_buf_num))
-        end
-
-        pred.column = pred_str[2]
-        if type(pred.column) ~= "number" then
-            pred.column = globals.DEFAULT_PRED_COLUMN
-        else
-            local pred_line_content = buf_get_line(pred_buf_num, pred.line)
-            local white_space_ammount = #pred_line_content - #pred_line_content:gsub("^%s+", "")
-            pred.column = clip_number(pred.column, white_space_ammount + 1, #pred_line_content - 1)
-        end
-    end
-
-    return pred
-end
-
----Predicts the next cursor position.
----@param config bhop.Opts
----@param callback fun(completion_result: bhop.Prediction)
-local function predict(config, callback)
-    local adapter = require("bunnyhop.adapters." .. config.adapter)
-    adapter.complete(create_prompt(), config, function(completion_result)
-        -- "Hack" to get around being unable to call vim functions in a callback.
-        callback(extract_pred(completion_result))
-    end)
-end
-
----Hops to prediction.
+---Empty stub for hop function
 function M.hop() end
 
 --- Initializes all the autocommands and hop function.
@@ -277,14 +113,13 @@ local function init()
             if current_win_config.relative ~= "" then
                 return
             end
-            predict(M.config, function(prediction)
-
+            bhop_pred.predict(bhop_adapter, M.config, function(prediction)
                 globals.pred.line = prediction.line
                 globals.pred.column = prediction.column
                 globals.pred.file = prediction.file
 
                 -- Makes sure to only display the preview mode when in normal mode
-                if vim.api.nvim_get_mode().mode == "n" then
+                if vim.api.nvim_get_mode().mode == "n" then -- TODO: Refactor to early return
                     if globals.preview_win_id ~= globals.DEFAULT_PREVIOUS_WIN_ID then
                         close_preview_win()
                     end
@@ -321,16 +156,7 @@ local function init()
         callback = close_preview_win
     })
     function M.hop()
-        if globals.pred.line == -1 or globals.pred.column == -1 then
-            return
-        end
-
-        -- Adds current position to the jumplist so you can <C-o> back to it if you don't like where you hopped.
-        vim.cmd("normal! m'")
-        local buf_num = vim.fn.bufnr(globals.pred.file, true)
-        vim.fn.bufload(buf_num)
-        vim.api.nvim_set_current_buf(buf_num)
-        vim.api.nvim_win_set_cursor(0, { globals.pred.line, globals.pred.column - 1 })
+        bhop_pred.hop(globals.pred)
         close_preview_win()
     end
 end
@@ -343,7 +169,8 @@ function M.setup(opts)
         M.config[opt_key] = opt_val
     end
 
-    require("bunnyhop.adapters." .. M.config.adapter).process_api_key(
+    bhop_adapter = require("bunnyhop.adapters." .. M.config.adapter)
+    bhop_adapter.process_api_key(
         M.config.api_key,
         function(api_key)
             M.config.api_key = api_key

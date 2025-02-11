@@ -9,6 +9,6 @@
 
 ---Prediction data used by the predict and hop functions.
 ---@class bhop.Prediction
----@field file string
 ---@field line number
 ---@field column number
+---@field file string
