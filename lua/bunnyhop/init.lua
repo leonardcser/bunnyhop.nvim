@@ -105,8 +105,13 @@ function M.hop() end
 
 --- Initializes all the autocommands and hop function.
 local function init()
+    -- Functions initialization
+    function M.hop()
+        bhop_pred.hop(globals.pred)
+        close_preview_win()
+    end
 
-    --- Autocommand initialization
+    --- Autocommands initialization
     vim.api.nvim_create_autocmd({ "ModeChanged" }, {
         group = vim.api.nvim_create_augroup("PredictCursor", { clear = true }),
         pattern = "i:n",
@@ -158,10 +163,6 @@ local function init()
         pattern = "*",
         callback = close_preview_win
     })
-    function M.hop()
-        bhop_pred.hop(globals.pred)
-        close_preview_win()
-    end
 end
 
 ---Setup function
