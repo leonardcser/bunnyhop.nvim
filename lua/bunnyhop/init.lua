@@ -1,5 +1,7 @@
 local bhop_log = require("bunnyhop.log")
 local bhop_pred = require("bunnyhop.prediction")
+local bhop_context = require("bunnyhop.context")
+
 local bhop_adapter = {
     process_api_key = function(api_key, callback) end, --luacheck: no unused args
     get_models = function(config, callback) end, --luacheck: no unused args
