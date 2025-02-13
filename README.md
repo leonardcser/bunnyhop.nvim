@@ -17,6 +17,8 @@ Hop across your code at lightning speed ⚡️⚡️⚡️
 
 ### Prerequisites
 
+Curl and its cli are required as they are used for performing http requests to the different LLM providers.
+
 Either Copilot(Recommenced) or Hugging Face's [Serverless](https://huggingface.co/docs/api-inference/en/index).
 - For Copilot, you only need to set it up via [copilot.lua](https://github.com/zbirenbaum/copilot.lua) or [copilot.vim](https://github.com/github/copilot.vim).
 - For Hugging Face, an API key is required. Learn how to set it up [here](https://huggingface.co/docs/api-inference/en/getting-started). Once you have the API key, create an enviornment variable for the key, eg. `export HF_API_KEY=************`.
