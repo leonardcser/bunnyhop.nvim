@@ -8,16 +8,16 @@ local bhop_adapter = {
     complete = function(prompt, config, callback) end, --luacheck: no unused args
 }
 
-local globals = {
-    DEFAULT_PREVIOUS_WIN_ID = -1,
-    DEFAULT_ACTION_COUNTER = 0,
-}
 ---@type number
-globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
+local _DEFAULT_PREVIOUS_WIN_ID = -1
 ---@type number
-globals.action_counter = globals.DEFAULT_ACTION_COUNTER
+local _DEFAULT_ACTION_COUNTER = 0
+---@type number
+local _preview_win_id = _DEFAULT_PREVIOUS_WIN_ID
+---@type number
+local _action_counter = _DEFAULT_ACTION_COUNTER
 ---@type bhop.Prediction
-globals.pred = vim.fn.deepcopy(bhop_pred.default_prediction)
+local _pred = vim.fn.deepcopy(bhop_pred.default_prediction)
 
 local M = {}
 -- The default config, gets overriden with user config options as needed.
@@ -36,13 +36,13 @@ M.config = {
 }
 
 local function close_preview_win()
-    if globals.preview_win_id < 0 then
+    if _preview_win_id < 0 then
         return
     end
 
-    vim.api.nvim_win_close(globals.preview_win_id, false)
-    globals.action_counter = globals.DEFAULT_ACTION_COUNTER
-    globals.preview_win_id = globals.DEFAULT_PREVIOUS_WIN_ID
+    vim.api.nvim_win_close(_preview_win_id, false)
+    _action_counter = _DEFAULT_ACTION_COUNTER
+    _preview_win_id = _DEFAULT_PREVIOUS_WIN_ID
 end
 
 ---Opens preview window and returns the window's ID.
@@ -109,7 +109,7 @@ function M.hop() end
 local function init()
     -- Functions initialization
     function M.hop()
-        bhop_pred.hop(globals.pred)
+        bhop_pred.hop(_pred)
         close_preview_win()
     end
 
@@ -123,18 +123,19 @@ local function init()
                 return
             end
             bhop_pred.predict(bhop_adapter, M.config, function(prediction)
-                globals.pred.line = prediction.line
-                globals.pred.column = prediction.column
-                globals.pred.file = prediction.file
+                _pred.line = prediction.line
+                _pred.column = prediction.column
+                _pred.file = prediction.file
 
                 -- Makes sure to only display the preview mode when in normal mode
                 if vim.api.nvim_get_mode().mode ~= "n" then return end
 
                 -- Makes sure to only display the preview mode when in normal mode
-                if globals.preview_win_id ~= globals.DEFAULT_PREVIOUS_WIN_ID then
+                if _preview_win_id ~= _DEFAULT_PREVIOUS_WIN_ID then
                     close_preview_win()
                 end
-                globals.preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
+                _preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
+
             end)
         end,
     })
@@ -146,15 +147,15 @@ local function init()
         group = prev_win_augroup,
         pattern = "*",
         callback = function()
-            if globals.preview_win_id < 0 then
+            if _preview_win_id < 0 then
                 return
             end
-            if globals.action_counter < 1 then
+            if _action_counter < 1 then
                 vim.api.nvim_win_set_config(
-                    globals.preview_win_id,
+                    _preview_win_id,
                     { relative = "cursor", row = 1, col = 0 }
                 )
-                globals.action_counter = globals.action_counter + 1
+                _action_counter = _action_counter + 1
             else
                 close_preview_win()
             end
