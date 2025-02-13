@@ -2,7 +2,7 @@ local bhop_log = require("bunnyhop.log")
 local bhop_pred = require("bunnyhop.prediction")
 local bhop_context = require("bunnyhop.context")
 
-local bhop_adapter = {
+local _bhop_adapter = {
     process_api_key = function(api_key, callback) end, --luacheck: no unused args
     get_models = function(config, callback) end, --luacheck: no unused args
     complete = function(prompt, config, callback) end, --luacheck: no unused args
@@ -122,7 +122,7 @@ local function init()
             if current_win_config.relative ~= "" then
                 return
             end
-            bhop_pred.predict(bhop_adapter, M.config, function(prediction)
+            bhop_pred.predict(_bhop_adapter, M.config, function(prediction)
                 _pred.line = prediction.line
                 _pred.column = prediction.column
                 _pred.file = prediction.file
