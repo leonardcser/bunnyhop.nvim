@@ -176,8 +176,8 @@ function M.setup(opts)
         M.config[opt_key] = opt_val
     end
 
-    bhop_adapter = require("bunnyhop.adapters." .. M.config.adapter)
-    bhop_adapter.process_api_key(
+    _bhop_adapter = require("bunnyhop.adapters." .. M.config.adapter)
+    _bhop_adapter.process_api_key(
         M.config.api_key,
         function(api_key)
             M.config.api_key = api_key
