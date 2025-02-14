@@ -1,6 +1,6 @@
 local bhop_log = require("bunnyhop.log")
 
-local function traverse_undotree(entries, level)
+local function traverse_editlist(entries, level)
     local undolist = {}
     -- create diffs for each entry in our undotree
     for i = #entries, 1, -1 do
@@ -67,7 +67,7 @@ end
 
 local M = {}
 
-function M.build_undolist()
+function M.build_editlist()
     -- save our current cursor
     local cursor = vim.api.nvim_win_get_cursor(0)
 
@@ -75,7 +75,7 @@ function M.build_undolist()
     local ut = vim.fn.undotree()
 
     -- TODO: maybe use this opportunity to limit the number of root nodes we process overall, to ensure good performance
-    local undolist = traverse_undotree(ut.entries, 0)
+    local undolist = traverse_editlist(ut.entries, 0)
 
     -- restore everything after all diffs have been created
     -- BUG: `gi` (last insert location) is being killed by our method, we should save that as well
