@@ -175,7 +175,7 @@ local function init()
         callback = function()
             local buffer_name = vim.api.nvim_buf_get_name(0)
             if _undolists[buffer_name] == nil then
-                _undolists[buffer_name] = bhop_context.build_undolist()
+                _undolists[buffer_name] = bhop_context.build_editlist()
             end
         end
     })
