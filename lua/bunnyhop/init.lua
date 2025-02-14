@@ -8,6 +8,9 @@ local _bhop_adapter = {
     complete = function(prompt, config, callback) end, --luacheck: no unused args
 }
 
+---@type table<string, bhop.UndoEntry[]>
+local _undolists = {}
+
 ---@type number
 local _DEFAULT_PREVIOUS_WIN_ID = -1
 ---@type number
@@ -165,6 +168,16 @@ local function init()
         group = prev_win_augroup,
         pattern = "*",
         callback = close_preview_win
+    })
+    vim.api.nvim_create_autocmd("BufEnter", {
+        group = vim.api.nvim_create_augroup("AddUndolistEntry", {clear = true}),
+        pattern = "*",
+        callback = function()
+            local buffer_name = vim.api.nvim_buf_get_name(0)
+            if _undolists[buffer_name] == nil then
+                _undolists[buffer_name] = bhop_context.build_undolist()
+            end
+        end
     })
 end
 
