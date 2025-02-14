@@ -174,7 +174,8 @@ local function init()
         pattern = "*",
         callback = function()
             local buffer_name = vim.api.nvim_buf_get_name(0)
-            if _editlists[buffer_name] == nil then
+            local valid_file_name = buffer_name:match("^.+/([%w_-]+)%.([%w]+)$")
+            if valid_file_name ~= nil and _editlists[buffer_name] == nil then
                 _editlists[buffer_name] = bhop_context.build_editlist()
             end
         end
