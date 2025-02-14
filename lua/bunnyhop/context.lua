@@ -46,7 +46,7 @@ local function traverse_editlist(entries, level)
         local diff = vim.diff(buffer_before, buffer_after)
 
         -- extract edited line number
-        local line_num_match = diff:gmatch("@@ %-%d+")()
+        local line_num_match = diff:match("@@ %-%d+")
         ---@type number?
         local line_num = 1
         if line_num_match ~= nil then
