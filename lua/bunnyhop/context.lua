@@ -98,7 +98,10 @@ function M.create_prompt()
 
     for _, jump_row in pairs(jumplist) do
         local buf_num = jump_row["bufnr"]
-        if vim.fn.bufexists(buf_num) == 0 or vim.api.nvim_buf_is_valid(buf_num) == false then
+        if
+            vim.fn.bufexists(buf_num) == 0
+            or vim.api.nvim_buf_is_valid(buf_num) == false
+        then
             goto continue
         end
         local buf_name = vim.api.nvim_buf_get_name(buf_num)
