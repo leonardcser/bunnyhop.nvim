@@ -9,7 +9,7 @@ local _bhop_adapter = {
 }
 
 ---@type table<string, bhop.UndoEntry[]>
-local _undolists = {}
+local _editlists = {}
 
 ---@type number
 local _DEFAULT_PREVIOUS_WIN_ID = -1
@@ -174,8 +174,8 @@ local function init()
         pattern = "*",
         callback = function()
             local buffer_name = vim.api.nvim_buf_get_name(0)
-            if _undolists[buffer_name] == nil then
-                _undolists[buffer_name] = bhop_context.build_editlist()
+            if _editlists[buffer_name] == nil then
+                _editlists[buffer_name] = bhop_context.build_editlist()
             end
         end
     })
