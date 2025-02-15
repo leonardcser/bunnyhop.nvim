@@ -32,7 +32,7 @@ function M.predict(adapter, config, callback)
             file = M.default_prediction.file,
         }
         if success == true then
-            if vim.fn.filereadable(pred_str[3]) ~= 0 then
+            if vim.fn.filereadable(pred_str[3]) == 1 then
                 prediction.file = pred_str[3]
             end
             local pred_buf_num = vim.fn.bufadd(prediction.file)
