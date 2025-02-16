@@ -59,7 +59,8 @@ local function traverse_editlist(entries, level)
             time = entries[i].time, -- save state time, used in display
             diff = header .. diff, -- the proper diff, used for preview
             bufnr = vim.api.nvim_get_current_buf(), -- for which buffer this telescope was invoked, used to restore
-            line_num = line_num -- starting line number of the diff
+            line_num = line_num, -- starting line number of the diff
+            prediction = nil
         })
     end
     return undolist
