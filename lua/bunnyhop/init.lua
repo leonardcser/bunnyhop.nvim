@@ -1,5 +1,5 @@
 local bhop_log = require("bunnyhop.log")
-local bhop_pred = require("bunnyhop.prediction")
+local bhop_pred = require("bunnyhop.prediction") -- TODO: rename to bhop_prediction to keep naming consistancy with the whole project
 local bhop_context = require("bunnyhop.context")
 
 local _bhop_adapter = {
@@ -20,7 +20,7 @@ local _preview_win_id = _DEFAULT_PREVIOUS_WIN_ID
 ---@type number
 local _action_counter = _DEFAULT_ACTION_COUNTER
 ---@type bhop.Prediction
-local _pred = vim.fn.deepcopy(bhop_pred.default_prediction)
+local _pred = vim.fn.deepcopy(bhop_pred.default_prediction) -- TODO: rename to _prediction to keep naming consistancy with the whole project
 
 local M = {}
 -- The default config, gets overriden with user config options as needed.
@@ -105,6 +105,19 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
     return id
 end
 
+
+---Returns the lastest n elements in a list.
+---@param list table
+---@param n number
+---@return table
+local function latest_n(list, n)
+    local list_latest_n = {}
+    for edit_indx = #list - n, #list do
+        table.insert(list_latest_n, list[edit_indx])
+    end
+    return list_latest_n
+end
+
 ---Empty stub for hop function
 function M.hop() end
 
@@ -175,8 +188,33 @@ local function init()
         callback = function()
             local buffer_name = vim.api.nvim_buf_get_name(0)
             local valid_file_name = buffer_name:match("^.+/([%w_-]+)%.([%w]+)$")
-            if valid_file_name ~= nil and _editlists[buffer_name] == nil then
-                _editlists[buffer_name] = bhop_context.build_editlist()
+            if valid_file_name == nil or _editlists[buffer_name] ~= nil then
+                return
+            end
+
+            local edit_dir_path = vim.fn.stdpath("data") .. "/bunnyhop/edit_predictions/"
+            vim.fn.mkdir(edit_dir_path, "p")
+            local edit_file_path = edit_dir_path .. buffer_name:sub(2):gsub("/", "|") .. ".json"
+            local file_exists = vim.fn.filereadable(edit_file_path) == 1
+            if file_exists then
+                local file = io.open(edit_file_path, "r")
+                if file == nil then
+                    bhop_log.notify("Couldn't open file " .. edit_file_path .. " in read mode", vim.log.levels.DEBUG)
+                    return
+                end
+                local json_content = vim.json.decode(file:read("*a"), {object=true, array=true})
+                file:close()
+                _editlists[buffer_name] = latest_n(json_content, 40)
+            else
+                local file = io.open(edit_file_path, "w")
+                if file == nil then
+                    bhop_log.notify("Couldn't open file " .. edit_file_path .. " in write mode", vim.log.levels.DEBUG)
+                    return
+                end
+                local editlist = bhop_context.build_editlist()
+                file:write(vim.json.encode(editlist))
+                file:close()
+                _editlists[buffer_name] = latest_n(editlist, 40)
             end
         end
     })
