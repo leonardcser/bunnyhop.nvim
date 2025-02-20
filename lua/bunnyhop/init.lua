@@ -151,7 +151,7 @@ local function init()
                     close_preview_win()
                 end
                 _preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
-
+                -- TODO: Add prediction and edit entry to the edit history file of the specific buffer(current open buffer)
             end)
         end,
     })
