@@ -88,7 +88,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
 
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf, 0, 1, false, { pred_line_content })
-    local namespace = vim.api.nvim_create_namespace("test") -- TODO: check if removing namespace creation helps.
+    local namespace = vim.api.nvim_create_namespace("test") -- TODO: check if namespace creation is necessary.
     local byte_col = vim.str_byteindex(pred_line_content, vim.fn.min {prediction.column - 1, half_preview_win_width})
     ---@diagnostic disable-next-line: param-type-mismatch
     vim.api.nvim_buf_add_highlight(buf, namespace, "Cursor", 0, byte_col, byte_col + 1)
