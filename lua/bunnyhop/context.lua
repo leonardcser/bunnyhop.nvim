@@ -1,9 +1,13 @@
 local bhop_log = require("bunnyhop.log")
 
-local function traverse_editlist(entries)
+local function traverse_editlist(entries, n_latest)
     local editlist = {}
     -- create diffs for each entry in our undotree
-    for i = #entries, 1, -1 do
+    local stop = 1
+    if n_latest ~= nil then
+        stop = #entries - (n_latest - 1)
+    end
+    for i = #entries, stop, -1 do
         -- grab the buffer as it is after this iteration's undo state
         local success = pcall(function()
             vim.cmd("silent undo " .. entries[i].seq)
@@ -68,10 +72,10 @@ end
 
 local M = {}
 
-function M.build_editlist()
+function M.build_editlist(n_latest)
     local cursor = vim.api.nvim_win_get_cursor(0)
     local ut = vim.fn.undotree()
-    local editlist = traverse_editlist(ut.entries)
+    local editlist = traverse_editlist(ut.entries, n_latest)
 
     -- BUG: `gi` (last insert location) is being killed by our method, we should save that as well
     vim.cmd("silent undo " .. ut.seq_cur)
