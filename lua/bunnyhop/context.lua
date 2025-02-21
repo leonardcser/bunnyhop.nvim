@@ -69,21 +69,15 @@ end
 local M = {}
 
 function M.build_editlist()
-    -- save our current cursor
     local cursor = vim.api.nvim_win_get_cursor(0)
-
-    -- get all diffs
     local ut = vim.fn.undotree()
+    local editlist = traverse_editlist(ut.entries, 0)
 
-    -- TODO: maybe use this opportunity to limit the number of root nodes we process overall, to ensure good performance
-    local undolist = traverse_editlist(ut.entries, 0)
-
-    -- restore everything after all diffs have been created
     -- BUG: `gi` (last insert location) is being killed by our method, we should save that as well
     vim.cmd("silent undo " .. ut.seq_cur)
     vim.api.nvim_win_set_cursor(0, cursor)
 
-    return undolist
+    return editlist
 end
 
 ---Creates prompt
