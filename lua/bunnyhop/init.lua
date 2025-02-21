@@ -236,7 +236,6 @@ function M.setup(opts)
         end
     )
     local config_ok = M.config.api_key ~= nil
-    -- TODO: Alert user that the config was setup incorrectly and bunnyhop was not initialized.
     if config_ok then
         init()
     else
