@@ -40,7 +40,7 @@ function M.predict(adapter, config, callback)
 
             if type(pred_str[1]) == "number" then
                 prediction.line =
-                    clip_number(prediction.line, 1, vim.api.nvim_buf_line_count(pred_buf_num))
+                    clip_number(pred_str[2], 1, vim.api.nvim_buf_line_count(pred_buf_num))
             end
 
             if type(pred_str[2]) == "number" then
