@@ -64,7 +64,7 @@ local function traverse_editlist(entries, n_latest)
             diff = header .. diff, -- the proper diff, used for preview
             bufnr = vim.api.nvim_get_current_buf(), -- for which buffer this telescope was invoked, used to restore
             line_num = line_num, -- starting line number of the diff
-            line_num_prediction = -1 -- TODO: this doesn't show up in undolist
+            line_num_prediction = -1
         })
     end
     return editlist
