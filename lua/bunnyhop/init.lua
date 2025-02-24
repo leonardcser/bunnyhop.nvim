@@ -20,7 +20,7 @@ local _preview_win_id = _DEFAULT_PREVIOUS_WIN_ID
 ---@type number
 local _action_counter = _DEFAULT_ACTION_COUNTER
 ---@type bhop.Prediction
-local _pred = vim.fn.deepcopy(bhop_pred.default_prediction) -- TODO: rename to _prediction to keep naming consistancy with the whole project
+local _pred = bhop_pred.create_default_prediction() -- TODO: rename to _prediction to keep naming consistancy with the whole project
 
 local M = {}
 -- The default config, gets overriden with user config options as needed.

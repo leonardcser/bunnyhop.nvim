@@ -11,12 +11,14 @@ end
 
 local M = {}
 
----@class bhop.Prediction
-M.default_prediction = {
-    line = 1,
-    column = 1,
-    file = "%",
-}
+---@return bhop.Prediction
+function M.create_default_prediction()
+    return {
+        line = 1,
+        column = 1,
+        file = vim.api.nvim_buf_get_name(0),
+    }
+end
 
 ---Predicts the next cursor position.
 ---@param adapter table
@@ -25,12 +27,8 @@ M.default_prediction = {
 function M.predict(adapter, config, callback)
     adapter.complete(bhop_context.create_prompt(), config, function(completion_result)
         -- Processing the given curl result
-        local prediction = {
-            line = M.default_prediction.line,
-            column = M.default_prediction.column,
-            file = M.default_prediction.file,
-        }
         local success, prediction_json = pcall(vim.json.decode, completion_result)
+        local prediction = M.create_default_prediction()
         if success == true then
             if vim.fn.filereadable(prediction_json[3]) == 1 then
                 prediction.file = prediction_json[3]
