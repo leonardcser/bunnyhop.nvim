@@ -20,7 +20,7 @@ local _preview_win_id = _DEFAULT_PREVIOUS_WIN_ID
 ---@type number
 local _action_counter = _DEFAULT_ACTION_COUNTER
 ---@type bhop.Prediction
-local _pred = bhop_pred.create_default_prediction() -- TODO: rename to _prediction to keep naming consistancy with the whole project
+local _prediction = bhop_pred.create_default_prediction()
 
 local M = {}
 -- The default config, gets overriden with user config options as needed.
@@ -126,7 +126,7 @@ function M.hop() end
 local function init()
     -- Functions initialization
     function M.hop()
-        bhop_pred.hop(_pred)
+        bhop_pred.hop(_prediction)
         close_preview_win()
     end
 
@@ -140,9 +140,9 @@ local function init()
                 return
             end
             bhop_pred.predict(_bhop_adapter, M.config, function(prediction)
-                _pred.line = prediction.line
-                _pred.column = prediction.column
-                _pred.file = prediction.file
+                _prediction.line = prediction.line
+                _prediction.column = prediction.column
+                _prediction.file = prediction.file
 
                 -- Makes sure to only display the preview mode when in normal mode
                 if vim.api.nvim_get_mode().mode ~= "n" then return end
@@ -154,8 +154,8 @@ local function init()
                 _preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
                 -- TODO: Add prediction and edit entry to the edit history file of the specific buffer(current open buffer)
                 local latest_edit = bhop_context.build_editlist(1)
-                latest_edit.line_num_prediction = _pred.line
-                table.insert(_editlists[_pred.file], latest_edit)
+                latest_edit.line_num_prediction = _prediction.line
+                table.insert(_editlists[_prediction.file], latest_edit)
             end)
         end,
     })
