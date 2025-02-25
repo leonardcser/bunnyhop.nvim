@@ -125,7 +125,7 @@ function M.create_prompt()
         local file_content = ""
         local file = io.open(buf_name, "r")
         if file == nil then
-            bhop_log.notify("Wasn't able to open " .. buf_name, vim.log.levels.DEBUG)
+            bhop_log.notify("Wasn't able to open " .. buf_name, vim.log.levels.INFO)
         else
             file_content = file:read("*a")
             file:close()
