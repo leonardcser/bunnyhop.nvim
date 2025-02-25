@@ -61,11 +61,12 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
         )
         return -1
     end
-    if prediction.file == "%" then
-        prediction.file = vim.api.nvim_buf_get_name(0)
+    local prediction_file = vim.api.nvim_buf_get_name(0)
+    if prediction.file ~= "%" then -- TODO: remove this as its unnecessary now
+        prediction_file = prediction.file
     end
 
-    local preview_win_title = vim.fs.basename(prediction.file) .. " : " .. prediction.line
+    local preview_win_title = vim.fs.basename(prediction_file) .. " : " .. prediction.line
     local pred_line_content = vim.api.nvim_buf_get_lines(buf_num, prediction.line - 1, prediction.line, true)[1]
     local preview_win_width = vim.fn.max {
         1,
@@ -152,6 +153,9 @@ local function init()
                 end
                 _preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
                 -- TODO: Add prediction and edit entry to the edit history file of the specific buffer(current open buffer)
+                local latest_edit = bhop_context.build_editlist(1)
+                latest_edit.line_num_prediction = _pred.line
+                table.insert(_editlists[_pred.file], latest_edit)
             end)
         end,
     })
