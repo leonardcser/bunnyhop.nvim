@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.7.0](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.6.0...v0.7.0) (2025-03-03)
+
+
+### Features
+
+* add data collection ([84f4e82](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/84f4e82e590c1cb7f8cdbabaf1a427f6d516d110))
+* add o3-mini model to Copilot ([faccbe8](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/faccbe8d06d2c2bf961b882ec7dc998f15940091))
+
+### Bug Fixes
+
+* correct prediction.line assignment ([48975eb](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/48975ebf456b03210e3aa6eb2211e2b000337a59))
+* don't modify given prediction argument ([4a3a7ed](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/4a3a7ed6d3e8fe7bd804d285b0cb660e07bf584d))
+* fix copilot expiration error ([87f2bac](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/87f2bac8c8ece9963133518f0ae8cb76a9c1c8e5))
+* fix linter checks ([887adfa](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/887adfab69317843e64a310263bd45258a1eeac8))
+* make process_api_key adhear to the spec ([7423c58](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/7423c584dbb465ba132f982084fad79cf1f775e2))
+* only get editlist of valid files ([cf5b78a](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/cf5b78a4db69b61b5f8a1cee8da2948536f2b791))
+* prepend "_" to bhop_adapter ([d0bed47](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/d0bed4771bf0b4d54e9b2547e36d683e3e6a6414))
+* reduce expiration time from 5 to 2 minutes ([ac6c353](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/ac6c353a6b21c90d305bad05ace7537e982afdbe))
+* remove api_key arg for authorize_token callback ([a8e4d20](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/a8e4d207f664111b659a719f7eeff6d580b21d28))
+* remove extra space in preview window opening line ([60c9e4f](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/60c9e4f5b7558553e346edce443cd0b837de7d61))
+* temporarly account for a nil _editlists entry ([22f5bcf](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/22f5bcf74b31f956353eb910460a4c52a613baf9))
+
 ## [0.6.0](https://github.com/PLAZMAMA/bunnyhop.nvim/compare/v0.5.1...v0.6.0) (2025-01-26)
 
 
