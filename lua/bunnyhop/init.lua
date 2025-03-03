@@ -1,6 +1,7 @@
 local bhop_log = require("bunnyhop.log")
 local bhop_pred = require("bunnyhop.prediction") -- TODO: rename to bhop_prediction to keep naming consistancy with the whole project
 local bhop_context = require("bunnyhop.context")
+local bhop_jsona = require("bunnyhop.jsona")
 
 local _bhop_adapter = {
     process_api_key = function(api_key, callback) end, --luacheck: no unused args
@@ -10,7 +11,6 @@ local _bhop_adapter = {
 
 ---@type table<string, bhop.UndoEntry[]>
 local _editlists = {}
-
 ---@type number
 local _DEFAULT_PREVIOUS_WIN_ID = -1
 ---@type number
@@ -21,6 +21,8 @@ local _preview_win_id = _DEFAULT_PREVIOUS_WIN_ID
 local _action_counter = _DEFAULT_ACTION_COUNTER
 ---@type bhop.Prediction
 local _prediction = bhop_pred.create_default_prediction()
+---@type string
+local _edit_dir_path = vim.fn.stdpath("data") .. "/bunnyhop/edit_predictions/"
 
 local M = {}
 -- The default config, gets overriden with user config options as needed.
@@ -106,6 +108,9 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
     return id
 end
 
+local function get_editlist_file_path(file_path)
+    return _edit_dir_path .. file_path:sub(2):gsub("/", "|") .. ".csv"
+end
 
 ---Returns the lastest n elements in a list.
 ---@param list table
@@ -152,10 +157,17 @@ local function init()
                     close_preview_win()
                 end
                 _preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
-                -- TODO: Add prediction and edit entry to the edit history file of the specific buffer(current open buffer)
-                local latest_edit = bhop_context.build_editlist(1)
-                latest_edit.line_num_prediction = _prediction.line
-                table.insert(_editlists[_prediction.file], latest_edit)
+
+                -- Data collection
+                local latest_edit = bhop_context.build_editlist(1)[1]
+                if latest_edit == nil then
+                    return
+                end
+                latest_edit.prediction_line = prediction.line
+                latest_edit.prediction_file = prediction.file
+                latest_edit.model = M.config.model
+                table.insert(_editlists[prediction.file], latest_edit)
+                bhop_jsona.append(get_editlist_file_path(prediction.file), latest_edit)
             end)
         end,
     })
@@ -187,39 +199,26 @@ local function init()
         callback = close_preview_win
     })
     vim.api.nvim_create_autocmd("BufEnter", {
-        group = vim.api.nvim_create_augroup("AddUndolistEntry", {clear = true}),
+        group = vim.api.nvim_create_augroup("GetEditlist", {clear = true}),
         pattern = "*",
         callback = function()
             local buffer_name = vim.api.nvim_buf_get_name(0)
             local valid_file_name = buffer_name:match("^.+/([%w_-]+)%.([%w]+)$")
-            if valid_file_name == nil or _editlists[buffer_name] ~= nil then
+            if valid_file_name == nil then
                 return
             end
 
-            local edit_dir_path = vim.fn.stdpath("data") .. "/bunnyhop/edit_predictions/"
-            vim.fn.mkdir(edit_dir_path, "p")
-            local edit_file_path = edit_dir_path .. buffer_name:sub(2):gsub("/", "|") .. ".json"
+            vim.fn.mkdir(_edit_dir_path, "p")
+            local edit_file_path = get_editlist_file_path(buffer_name)
             local file_exists = vim.fn.filereadable(edit_file_path) == 1
             if file_exists then
-                local file = io.open(edit_file_path, "r")
-                if file == nil then
-                    bhop_log.notify("Couldn't open file " .. edit_file_path .. " in read mode", vim.log.levels.DEBUG)
-                    return
-                end
-                local json_content = vim.json.decode(file:read("*a"), {object=true, array=true})
-                file:close()
-                _editlists[buffer_name] = latest_n(json_content, 40)
-            else
-                local file = io.open(edit_file_path, "w")
-                if file == nil then
-                    bhop_log.notify("Couldn't open file " .. edit_file_path .. " in write mode", vim.log.levels.DEBUG)
-                    return
-                end
-                local editlist = bhop_context.build_editlist()
-                file:write(vim.json.encode(editlist))
-                file:close()
-                _editlists[buffer_name] = latest_n(editlist, 40)
+                local content = bhop_jsona.read(edit_file_path)
+                _editlists[buffer_name] = latest_n(content, 40)
+                return
             end
+            local editlist = bhop_context.build_editlist()
+            bhop_jsona.append(edit_file_path, editlist)
+            _editlists[buffer_name] = latest_n(editlist, 40)
         end
     })
 end
