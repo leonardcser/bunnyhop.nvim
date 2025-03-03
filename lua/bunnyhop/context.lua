@@ -49,22 +49,21 @@ local function traverse_editlist(entries, n_latest)
         ---@diagnostic disable-next-line: assign-type-mismatch
         local diff = vim.diff(buffer_before, buffer_after)
 
-        -- extract edited line number
-        local line_num_match = diff:match("@@ %-%d+")
+        local line_match = diff:match("@@ %-%d+")
         ---@type number?
-        local line_num = 1
-        if line_num_match ~= nil then
-            line_num = tonumber(line_num_match:sub(5))
+        local line = 1
+        if line_match ~= nil then
+            line = tonumber(line_match:sub(5))
         end
 
-        -- use the data we just created to feed into our finder later
         table.insert(editlist, {
-            seq = entries[i].seq, -- save state number, used in display and to restore
-            time = entries[i].time, -- save state time, used in display
-            diff = header .. diff, -- the proper diff, used for preview
-            bufnr = vim.api.nvim_get_current_buf(), -- for which buffer this telescope was invoked, used to restore
-            line_num = line_num, -- starting line number of the diff
-            line_num_prediction = -1
+            seq = entries[i].seq, -- state number
+            time = entries[i].time, -- state time
+            diff = header .. diff, -- the diff
+            file = vim.api.nvim_buf_get_name(0), -- edited file
+            line = line, -- starting edited line number of the diff
+            prediction_line = -1,
+            prediction_file = "",
         })
     end
     return editlist
@@ -89,7 +88,7 @@ end
 function M.create_prompt()
     -- Dict keys to column name convertor
     -- index (index of the table, 1 to n)
-    -- lnum -> line_num
+    -- lnum -> line
     -- bufnr -> buffer_name
     -- col -> column
     local jumplist = vim.fn.getjumplist()[1]
@@ -118,7 +117,7 @@ function M.create_prompt()
         ::continue::
     end
 
-    local CHANGELIST_COLUMNS = { "index", "line_num", "column" }
+    local CHANGELIST_COLUMNS = { "index", "line", "column" }
     local CHANGELIST_MAX_SIZE = 20
     local context = ""
     for buf_num, buf_name in pairs(visited_files) do
@@ -168,8 +167,8 @@ function M.create_prompt()
 
     local prompt = "Predict next cursor position based on the following information.\n"
         .. "ONLY output the following format:\n"
-        .. '[line_num, column, "buffer_name"].\n'
-        .. "'line_num' is the line number the cursor should be on next\n"
+        .. '[line, column, "buffer_name"].\n'
+        .. "'line' is the line number the cursor should be on next\n"
         .. "'column' is the column the cursor should be on next\n"
         .. "'buffer_name' should be the name of the file the cursor should be on next\n"
         .. "DO NOT HALLUCINATE!\n" -- for the memes
