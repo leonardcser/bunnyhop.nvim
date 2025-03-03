@@ -166,8 +166,12 @@ local function init()
                 latest_edit.prediction_line = prediction.line
                 latest_edit.prediction_file = prediction.file
                 latest_edit.model = M.config.model
-                table.insert(_editlists[prediction.file], latest_edit)
                 bhop_jsona.append(get_editlist_file_path(prediction.file), latest_edit)
+                -- TODO: This if statement is a patch, find the root cause and fix it.
+                if _editlists[prediction.file] == nil then
+                    return
+                end
+                table.insert(_editlists[prediction.file], latest_edit)
             end)
         end,
     })
