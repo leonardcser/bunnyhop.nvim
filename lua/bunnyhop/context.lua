@@ -17,7 +17,7 @@ local function traverse_editlist(entries, n_latest)
                 "Encountered a bad state in nvim's native undolist for buffer "
                     .. vim.api.nvim_buf_get_name(0)
                     .. ", showing partial results.",
-                vim.log.levels.INFO
+                vim.log.levels.DEBUG
             )
             return editlist
         end
@@ -34,7 +34,7 @@ local function traverse_editlist(entries, n_latest)
                 "Encountered a bad state in nvim's native undolist for buffer "
                     .. vim.api.nvim_buf_get_name(0)
                     .. ", showing partial results.",
-                vim.log.levels.INFO
+                vim.log.levels.DEBUG
             )
             return editlist
         end
@@ -124,7 +124,7 @@ function M.create_prompt()
         local file_content = ""
         local file = io.open(buf_name, "r")
         if file == nil then
-            bhop_log.notify("Wasn't able to open " .. buf_name, vim.log.levels.INFO)
+            bhop_log.notify("Wasn't able to open " .. buf_name, vim.log.levels.DEBUG)
         else
             file_content = file:read("*a")
             file:close()
