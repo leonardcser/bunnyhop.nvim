@@ -5,14 +5,8 @@
 
 ### Features
 
-* add csv module ([cd181d0](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/cd181d0e70f324f48845e471827e2a5774d7839f))
 * add data collection ([84f4e82](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/84f4e82e590c1cb7f8cdbabaf1a427f6d516d110))
-* add file opened data collection logic ([4c5f570](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/4c5f570b43bf6b11e9a2a72a9a5ee8d0572d6817))
 * add o3-mini model to Copilot ([faccbe8](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/faccbe8d06d2c2bf961b882ec7dc998f15940091))
-* add the ability to get the latest N of the editlist ([6d9881e](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/6d9881e8e249e30005db2cad891681a7c196abe4))
-* add traverse_undotree and build_undolist functions ([829ce00](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/829ce001b5a5be11d0381a81709dff7ff3924bc8))
-* add undolist entries dynamically when entring new buffers ([8d3978d](https://github.com/PLAZMAMA/bunnyhop.nvim/commit/8d3978d57be1eabe8aa11b4ac0e2fc930208503f))
-
 
 ### Bug Fixes
 
