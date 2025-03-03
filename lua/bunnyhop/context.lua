@@ -13,11 +13,11 @@ local function traverse_editlist(entries, n_latest)
             vim.cmd("silent undo " .. entries[i].seq)
         end)
         if not success then
-            vim.notify_once(
+            bhop_log.notify(
                 "Encountered a bad state in nvim's native undolist for buffer "
                     .. vim.api.nvim_buf_get_name(0)
                     .. ", showing partial results.",
-                vim.log.levels.ERROR
+                vim.log.levels.INFO
             )
             return editlist
         end
@@ -30,11 +30,11 @@ local function traverse_editlist(entries, n_latest)
             vim.cmd("silent undo")
         end)
         if not success then
-            vim.notify_once(
+            bhop_log.notify(
                 "Encountered a bad state in nvim's native undolist for buffer "
                     .. vim.api.nvim_buf_get_name(0)
                     .. ", showing partial results.",
-                vim.log.levels.ERROR
+                vim.log.levels.INFO
             )
             return editlist
         end
