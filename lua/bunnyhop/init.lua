@@ -109,7 +109,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
 end
 
 local function get_editlist_file_path(file_path)
-    return _edit_dir_path .. file_path:sub(2):gsub("/", "|") .. ".csv"
+    return _edit_dir_path .. file_path:sub(2):gsub("/", "|") .. ".jsona"
 end
 
 ---Returns the lastest n elements in a list.
