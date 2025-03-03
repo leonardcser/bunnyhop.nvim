@@ -11,12 +11,14 @@ end
 
 local M = {}
 
----@class bhop.Prediction
-M.default_prediction = {
-    line = 1,
-    column = 1,
-    file = "%",
-}
+---@return bhop.Prediction
+function M.create_default_prediction()
+    return {
+        line = 1,
+        column = 1,
+        file = vim.api.nvim_buf_get_name(0),
+    }
+end
 
 ---Predicts the next cursor position.
 ---@param adapter table
@@ -25,28 +27,24 @@ M.default_prediction = {
 function M.predict(adapter, config, callback)
     adapter.complete(bhop_context.create_prompt(), config, function(completion_result)
         -- Processing the given curl result
-        local success, pred_str = pcall(vim.json.decode, completion_result)
-        local prediction = {
-            line = M.default_prediction.line,
-            column = M.default_prediction.column,
-            file = M.default_prediction.file,
-        }
+        local success, prediction_json = pcall(vim.json.decode, completion_result)
+        local prediction = M.create_default_prediction()
         if success == true then
-            if vim.fn.filereadable(pred_str[3]) ~= 0 then
-                prediction.file = pred_str[3]
+            if vim.fn.filereadable(prediction_json[3]) == 1 then
+                prediction.file = prediction_json[3]
             end
             local pred_buf_num = vim.fn.bufadd(prediction.file)
             vim.fn.bufload(pred_buf_num)
 
-            if type(pred_str[1]) == "number" then
+            if type(prediction_json[1]) == "number" then
                 prediction.line =
-                    clip_number(prediction.line, 1, vim.api.nvim_buf_line_count(pred_buf_num))
+                    clip_number(prediction_json[2], 1, vim.api.nvim_buf_line_count(pred_buf_num))
             end
 
-            if type(pred_str[2]) == "number" then
+            if type(prediction_json[2]) == "number" then
                 local pred_line_content = vim.api.nvim_buf_get_lines(pred_buf_num, prediction.line - 1, prediction.line, true)[1]
                 local white_space_ammount = #pred_line_content - #pred_line_content:gsub("^%s+", "")
-                prediction.column = clip_number(pred_str[2], white_space_ammount + 1, #pred_line_content - 1)
+                prediction.column = clip_number(prediction_json[2], white_space_ammount + 1, #pred_line_content - 1)
             end
         end
 
