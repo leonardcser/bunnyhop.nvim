@@ -17,6 +17,17 @@
 ---@class bhop.UndoEntry
 ---@field bufnr number
 ---@field diff number
----@field line_num number
+---@field line number
 ---@field seq number
 ---@field time number
+
+---Entry of the editlist
+---@class bhop.EditEntry
+---@field seq number state number
+---@field time number state time
+---@field diff string the diff
+---@field file string edited file
+---@field line number starting edited line number of the diff
+---@field prediction_line number predicted line
+---@field prediction_file string predicted file
+---@field model string model used to predict the
