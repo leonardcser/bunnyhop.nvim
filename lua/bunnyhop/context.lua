@@ -28,7 +28,6 @@ function M.build_editlist(n_latest)
             )
             break
         end
-
         local buffer_after_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) or {}
         local buffer_after = table.concat(buffer_after_lines, "\n")
 
@@ -47,14 +46,11 @@ function M.build_editlist(n_latest)
         local buffer_before_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) or {}
         local buffer_before = table.concat(buffer_before_lines, "\n")
 
-        -- build diff header so that delta can go ahead and syntax highlight
         local filename = vim.fn.expand("%")
         local header = filename .. "\n--- " .. filename .. "\n+++ " .. filename .. "\n"
-
         ---@type string
         ---@diagnostic disable-next-line: assign-type-mismatch
         local diff = vim.diff(buffer_before, buffer_after)
-
         local line_match = diff:match("@@ %-%d+")
         ---@type number?
         local line = 1
