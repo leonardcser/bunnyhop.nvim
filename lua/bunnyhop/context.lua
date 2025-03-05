@@ -1,25 +1,29 @@
 local bhop_log = require("bunnyhop.log")
 
-local function traverse_editlist(entries, n_latest)
+local M = {}
+
+function M.build_editlist(n_latest)
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local ut = vim.fn.undotree()
+
     local editlist = {}
     -- create diffs for each entry in our undotree
     local stop = 1
     if n_latest ~= nil then
-        stop = #entries - (n_latest - 1)
+        stop = #ut.entries - (n_latest - 1)
     end
-    for i = #entries, stop, -1 do
+    for i = #ut.entries, stop, -1 do
         -- grab the buffer as it is after this iteration's undo state
         local success = pcall(function()
-            vim.cmd("silent undo " .. entries[i].seq)
+            vim.cmd("silent undo " .. ut.entries[i].seq)
         end)
         if not success then
             bhop_log.notify(
                 "Encountered a bad state in nvim's native undolist for buffer "
-                    .. vim.api.nvim_buf_get_name(0)
-                    .. ", showing partial results.",
+                    .. vim.api.nvim_buf_get_name(0),
                 vim.log.levels.DEBUG
             )
-            return editlist
+            break
         end
 
         local buffer_after_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) or {}
@@ -32,11 +36,10 @@ local function traverse_editlist(entries, n_latest)
         if not success then
             bhop_log.notify(
                 "Encountered a bad state in nvim's native undolist for buffer "
-                    .. vim.api.nvim_buf_get_name(0)
-                    .. ", showing partial results.",
+                    .. vim.api.nvim_buf_get_name(0),
                 vim.log.levels.DEBUG
             )
-            return editlist
+            break
         end
         local buffer_before_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) or {}
         local buffer_before = table.concat(buffer_before_lines, "\n")
@@ -57,8 +60,8 @@ local function traverse_editlist(entries, n_latest)
         end
 
         table.insert(editlist, {
-            seq = entries[i].seq, -- state number
-            time = entries[i].time, -- state time
+            seq = ut.entries[i].seq, -- state number
+            time = ut.entries[i].time, -- state time
             diff = header .. diff, -- the diff
             file = vim.api.nvim_buf_get_name(0), -- edited file
             line = line, -- starting edited line number of the diff
@@ -66,15 +69,6 @@ local function traverse_editlist(entries, n_latest)
             prediction_file = "",
         })
     end
-    return editlist
-end
-
-local M = {}
-
-function M.build_editlist(n_latest)
-    local cursor = vim.api.nvim_win_get_cursor(0)
-    local ut = vim.fn.undotree()
-    local editlist = traverse_editlist(ut.entries, n_latest)
 
     -- BUG: `gi` (last insert location) is being killed by our method, we should save that as well
     vim.cmd("silent undo " .. ut.seq_cur)
