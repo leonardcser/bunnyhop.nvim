@@ -105,7 +105,7 @@ eval $(luarocks path --no-bin)
 
 If you encounter `sh: nlua: command not found` error the error above occurs do[^1]:
 
-#### Linux/Max
+#### Linux/Mac
 
 Run the following command:
 ```bash
