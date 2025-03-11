@@ -26,10 +26,10 @@ end
 ---@param callback fun(prediction: bhop.Prediction)
 function M.predict(adapter, config, callback)
     adapter.complete(bhop_context.create_prompt(), config, function(completion_result)
-        -- Processing the given curl result
-        local success, prediction_json = pcall(vim.json.decode, completion_result)
         local prediction = M.create_default_prediction()
-        if success == true then
+        local json_match = string.match(completion_result, '%[%d+, %d+, "[%w/\\.-_]+"%]')
+        if json_match ~= nil then
+            local prediction_json = vim.json.decode(json_match)
             if vim.fn.filereadable(prediction_json[3]) == 1 then
                 prediction.file = prediction_json[3]
             end
