@@ -27,7 +27,7 @@ end
 function M.predict(adapter, config, callback)
     adapter.complete(bhop_context.create_prompt(), config, function(completion_result)
         local prediction = M.create_default_prediction()
-        local json_match = string.match(completion_result, '%[%d+, %d+, "[%w/\\.-_]+"%]')
+        local json_match = completion_result:match('%[%d+, %d+, "[%w/\\.-_]+"%]')
         if json_match ~= nil then
             local prediction_json = vim.json.decode(json_match)
             if vim.fn.filereadable(prediction_json[3]) == 1 then
