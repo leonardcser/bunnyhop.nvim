@@ -3,7 +3,7 @@ local bhop_log = require("bunnyhop.log")
 local M = {}
 
 ---Builds editlist of the current buffer
----@param n_latest number n latest undootree entires to build the editlist from.
+---@param n_latest? number n latest undootree entires to build the editlist from.
 ---@return bhop.UndoEntry[]
 function M.build_editlist(n_latest)
     local cursor = vim.api.nvim_win_get_cursor(0)
