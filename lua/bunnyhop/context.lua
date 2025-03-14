@@ -61,11 +61,12 @@ function M.build_editlist(n_latest)
         table.insert(editlist, {
             seq = ut.entries[i].seq, -- state number
             time = ut.entries[i].time, -- state time
-            diff = header .. diff, -- the diff
+            diff = header .. diff, -- the diff of what was edited
             file = vim.api.nvim_buf_get_name(0), -- edited file
-            line = line, -- starting edited line number of the diff
+            line = line, -- starting edited line number
             prediction_line = -1,
             prediction_file = "",
+            model = "",
         })
     end
 
