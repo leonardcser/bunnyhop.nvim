@@ -1,5 +1,5 @@
 local bhop_log = require("bunnyhop.log")
-local bhop_pred = require("bunnyhop.prediction") -- TODO: rename to bhop_prediction to keep naming consistancy with the whole project
+local bhop_prediction = require("bunnyhop.prediction")
 local bhop_context = require("bunnyhop.context")
 local bhop_jsona = require("bunnyhop.jsona")
 
@@ -20,7 +20,7 @@ local _preview_win_id = _DEFAULT_PREVIOUS_WIN_ID
 ---@type number
 local _action_counter = _DEFAULT_ACTION_COUNTER
 ---@type bhop.Prediction
-local _prediction = bhop_pred.create_default_prediction()
+local _prediction = bhop_prediction.create_default_prediction()
 ---@type string
 local _edit_dir_path = vim.fn.stdpath("data") .. "/bunnyhop/edit_predictions/"
 
@@ -131,7 +131,7 @@ function M.hop() end
 local function init()
     -- Functions initialization
     function M.hop()
-        bhop_pred.hop(_prediction)
+        bhop_prediction.hop(_prediction)
         close_preview_win()
     end
 
@@ -144,7 +144,7 @@ local function init()
             if current_win_config.relative ~= "" then
                 return
             end
-            bhop_pred.predict(_bhop_adapter, M.config, function(prediction)
+            bhop_prediction.predict(_bhop_adapter, M.config, function(prediction)
                 _prediction.line = prediction.line
                 _prediction.column = prediction.column
                 _prediction.file = prediction.file
