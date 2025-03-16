@@ -63,10 +63,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
         )
         return -1
     end
-    local prediction_file = vim.api.nvim_buf_get_name(0)
-    if prediction.file ~= "%" then -- TODO: remove this as its unnecessary now
-        prediction_file = prediction.file
-    end
+    local prediction_file = prediction.file
 
     local preview_win_title = vim.fs.basename(prediction_file) .. " : " .. prediction.line
     local pred_line_content = vim.api.nvim_buf_get_lines(buf_num, prediction.line - 1, prediction.line, true)[1]
