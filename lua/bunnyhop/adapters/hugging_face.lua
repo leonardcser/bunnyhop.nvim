@@ -56,7 +56,7 @@ function M.complete(prompt, config, callback)
     local request_body = vim.json.encode {
         model = config.model,
         messages = { { role = "user", content = prompt } },
-        max_tokens = 30, -- TODO: increase to 50
+        max_tokens = 50,
         stream = false,
     }
     vim.system({

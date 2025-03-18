@@ -1,5 +1,5 @@
 local bhop_log = require("bunnyhop.log")
-local bhop_pred = require("bunnyhop.prediction") -- TODO: rename to bhop_prediction to keep naming consistancy with the whole project
+local bhop_prediction = require("bunnyhop.prediction")
 local bhop_context = require("bunnyhop.context")
 local bhop_jsona = require("bunnyhop.jsona")
 
@@ -20,24 +20,19 @@ local _preview_win_id = _DEFAULT_PREVIOUS_WIN_ID
 ---@type number
 local _action_counter = _DEFAULT_ACTION_COUNTER
 ---@type bhop.Prediction
-local _prediction = bhop_pred.create_default_prediction()
+local _prediction = bhop_prediction.create_default_prediction()
 ---@type string
 local _edit_dir_path = vim.fn.stdpath("data") .. "/bunnyhop/edit_predictions/"
 
 local M = {}
 -- The default config, gets overriden with user config options as needed.
 ---@class bhop.Opts
-M.config = {
+M.opts = {
     adapter = "copilot",
-    -- Model to use for chosen provider.
-    -- To know what models are available for chosen adapter,
-    -- run `:lua require("bunnyhop.adapters.{adapter}").get_models()`
     model = "gpt-4o-2024-08-06",
-    -- Copilot doesn't use the API key, Hugging Face does.
     api_key = "",
-    -- Max width the preview window will be.
-    -- Here for if you want to make the preview window bigger/smaller.
     max_prev_width = 20,
+    collect_data = false,
 }
 
 local function close_preview_win()
@@ -63,10 +58,7 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
         )
         return -1
     end
-    local prediction_file = vim.api.nvim_buf_get_name(0)
-    if prediction.file ~= "%" then -- TODO: remove this as its unnecessary now
-        prediction_file = prediction.file
-    end
+    local prediction_file = prediction.file
 
     local preview_win_title = vim.fs.basename(prediction_file) .. " : " .. prediction.line
     local pred_line_content = vim.api.nvim_buf_get_lines(buf_num, prediction.line - 1, prediction.line, true)[1]
@@ -91,10 +83,9 @@ local function open_preview_win(prediction, max_prev_width) --luacheck: no unuse
 
     local buf = vim.api.nvim_create_buf(false, true)
     vim.api.nvim_buf_set_lines(buf, 0, 1, false, { pred_line_content })
-    local namespace = vim.api.nvim_create_namespace("test") -- TODO: check if namespace creation is necessary.
     local byte_col = vim.str_byteindex(pred_line_content, vim.fn.min {prediction.column - 1, half_preview_win_width})
     ---@diagnostic disable-next-line: param-type-mismatch
-    vim.api.nvim_buf_add_highlight(buf, namespace, "Cursor", 0, byte_col, byte_col + 1)
+    vim.api.nvim_buf_add_highlight(buf, 0, "Cursor", 0, byte_col, byte_col + 1)
     local id = vim.api.nvim_open_win(buf, false, {
         relative = "cursor",
         row = 1,
@@ -131,7 +122,7 @@ function M.hop() end
 local function init()
     -- Functions initialization
     function M.hop()
-        bhop_pred.hop(_prediction)
+        bhop_prediction.hop(_prediction)
         close_preview_win()
     end
 
@@ -144,28 +135,25 @@ local function init()
             if current_win_config.relative ~= "" then
                 return
             end
-            bhop_pred.predict(_bhop_adapter, M.config, function(prediction)
-                _prediction.line = prediction.line
-                _prediction.column = prediction.column
-                _prediction.file = prediction.file
-
-                -- Makes sure to only display the preview mode when in normal mode
+            bhop_prediction.predict(_bhop_adapter, M.opts, function(prediction)
                 if vim.api.nvim_get_mode().mode ~= "n" then return end
 
-                -- Makes sure to only display the preview mode when in normal mode
                 if _preview_win_id ~= _DEFAULT_PREVIOUS_WIN_ID then
                     close_preview_win()
                 end
-                _preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
+                _prediction.line = prediction.line
+                _prediction.column = prediction.column
+                _prediction.file = prediction.file
+                _preview_win_id = open_preview_win(prediction, M.opts.max_prev_width)
 
-                -- Data collection
+                if M.opts.collect_data == false then return end
                 local latest_edit = bhop_context.build_editlist(1)[1]
                 if latest_edit == nil then
                     return
                 end
                 latest_edit["prediction_line"] = prediction.line
                 latest_edit["prediction_file"] = prediction.file
-                latest_edit["model"] = M.config.model
+                latest_edit["model"] = M.opts.model
                 bhop_jsona.append(get_editlist_file_path(prediction.file), {latest_edit})
                 -- TODO: This if statement is a patch, find the root cause and fix it.
                 if _editlists[prediction.file] == nil then
@@ -202,6 +190,8 @@ local function init()
         pattern = "*",
         callback = close_preview_win
     })
+
+    if M.opts.collect_data == false then return end
     vim.api.nvim_create_autocmd("BufEnter", {
         group = vim.api.nvim_create_augroup("GetEditlist", {clear = true}),
         pattern = "*",
@@ -232,17 +222,17 @@ end
 function M.setup(opts)
     ---@diagnostic disable-next-line: param-type-mismatch
     for opt_key, opt_val in pairs(opts) do
-        M.config[opt_key] = opt_val
+        M.opts[opt_key] = opt_val
     end
 
-    _bhop_adapter = require("bunnyhop.adapters." .. M.config.adapter)
+    _bhop_adapter = require("bunnyhop.adapters." .. M.opts.adapter)
     _bhop_adapter.process_api_key(
-        M.config.api_key,
+        M.opts.api_key,
         function(api_key)
-            M.config.api_key = api_key
+            M.opts.api_key = api_key
         end
     )
-    local config_ok = M.config.api_key ~= nil
+    local config_ok = M.opts.api_key ~= nil
     if config_ok then
         init()
     else
