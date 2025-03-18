@@ -12,6 +12,8 @@
 -- Max width the preview window will be.
 -- Here for if you want to make the preview window bigger/smaller.
 ---@field max_prev_width number
+-- Collects data locally when set to true. NO DATA LEAVES YOUR PC!
+---@field collect_data boolean
 
 ---Prediction data used by the predict and hop functions.
 ---@class bhop.Prediction
