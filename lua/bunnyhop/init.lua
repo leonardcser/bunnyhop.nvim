@@ -32,7 +32,7 @@ M.opts = {
     model = "gpt-4o-2024-08-06",
     api_key = "",
     max_prev_width = 20,
-
+    collect_data = false,
 }
 
 local function close_preview_win()
@@ -146,7 +146,7 @@ local function init()
                 _prediction.file = prediction.file
                 _preview_win_id = open_preview_win(prediction, M.opts.max_prev_width)
 
-                -- Data collection
+                if M.opts.collect_data == false then return end
                 local latest_edit = bhop_context.build_editlist(1)[1]
                 if latest_edit == nil then
                     return
@@ -190,6 +190,8 @@ local function init()
         pattern = "*",
         callback = close_preview_win
     })
+
+    if M.opts.collect_data == false then return end
     vim.api.nvim_create_autocmd("BufEnter", {
         group = vim.api.nvim_create_augroup("GetEditlist", {clear = true}),
         pattern = "*",
