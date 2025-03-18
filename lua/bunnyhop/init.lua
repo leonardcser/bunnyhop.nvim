@@ -27,7 +27,7 @@ local _edit_dir_path = vim.fn.stdpath("data") .. "/bunnyhop/edit_predictions/"
 local M = {}
 -- The default config, gets overriden with user config options as needed.
 ---@class bhop.Opts
-M.config = {
+M.opts = {
     adapter = "copilot",
     -- Model to use for chosen provider.
     -- To know what models are available for chosen adapter,
@@ -140,7 +140,7 @@ local function init()
             if current_win_config.relative ~= "" then
                 return
             end
-            bhop_prediction.predict(_bhop_adapter, M.config, function(prediction)
+            bhop_prediction.predict(_bhop_adapter, M.opts, function(prediction)
                 if vim.api.nvim_get_mode().mode ~= "n" then return end
 
                 if _preview_win_id ~= _DEFAULT_PREVIOUS_WIN_ID then
@@ -149,7 +149,7 @@ local function init()
                 _prediction.line = prediction.line
                 _prediction.column = prediction.column
                 _prediction.file = prediction.file
-                _preview_win_id = open_preview_win(prediction, M.config.max_prev_width)
+                _preview_win_id = open_preview_win(prediction, M.opts.max_prev_width)
 
                 -- Data collection
                 local latest_edit = bhop_context.build_editlist(1)[1]
@@ -158,7 +158,7 @@ local function init()
                 end
                 latest_edit["prediction_line"] = prediction.line
                 latest_edit["prediction_file"] = prediction.file
-                latest_edit["model"] = M.config.model
+                latest_edit["model"] = M.opts.model
                 bhop_jsona.append(get_editlist_file_path(prediction.file), {latest_edit})
                 -- TODO: This if statement is a patch, find the root cause and fix it.
                 if _editlists[prediction.file] == nil then
@@ -225,17 +225,17 @@ end
 function M.setup(opts)
     ---@diagnostic disable-next-line: param-type-mismatch
     for opt_key, opt_val in pairs(opts) do
-        M.config[opt_key] = opt_val
+        M.opts[opt_key] = opt_val
     end
 
-    _bhop_adapter = require("bunnyhop.adapters." .. M.config.adapter)
+    _bhop_adapter = require("bunnyhop.adapters." .. M.opts.adapter)
     _bhop_adapter.process_api_key(
-        M.config.api_key,
+        M.opts.api_key,
         function(api_key)
-            M.config.api_key = api_key
+            M.opts.api_key = api_key
         end
     )
-    local config_ok = M.config.api_key ~= nil
+    local config_ok = M.opts.api_key ~= nil
     if config_ok then
         init()
     else
