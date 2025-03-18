@@ -3,8 +3,14 @@
 ---Configuration options for the bunnyhop plugin.
 ---@class bhop.Opts
 ---@field adapter "hugging_face" | "copilot"
+-- Model to use for chosen provider.
+-- To know what models are available for chosen adapter,
+-- run `:lua require("bunnyhop.adapters.{adapter}").get_models()`
 ---@field model string
+-- Copilot doesn't use the API key, Hugging Face does.
 ---@field api_key string
+-- Max width the preview window will be.
+-- Here for if you want to make the preview window bigger/smaller.
 ---@field max_prev_width number
 
 ---Prediction data used by the predict and hop functions.
