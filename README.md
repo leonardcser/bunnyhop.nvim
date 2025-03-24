@@ -55,6 +55,10 @@ Either Copilot(Recommenced) or Hugging Face's [Serverless](https://huggingface.c
         -- Max width the preview window will be.
         -- Here for if you want to make the preview window bigger/smaller.
         max_prev_width = 20,
+        -- This is an option to enable LOCAL data collection.
+        -- Can be used to assess the accuracy of the predictions and will be used for better context creation.
+        -- Currently its disabled by default to respect user privacy but will be required later for better performance and planned advanced features.
+        collect_data = false,
     },
 },
 ```
