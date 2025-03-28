@@ -114,15 +114,6 @@ local function latest_n(list, n)
     return list_latest_n
 end
 
----@return bhop.Prediction
-function M.create_default_prediction()
-    return {
-        line = 1,
-        column = 1,
-        file = vim.api.nvim_buf_get_name(0),
-    }
-end
-
 ---Clips number "num" to be within the range of "min" and "max".
 ---@param num number
 ---@param min number
@@ -171,7 +162,11 @@ local function init()
                 if vim.api.nvim_get_mode().mode ~= "n" then return end
 
                 -- Prasing completion result to prediction
-                _prediction = M.create_default_prediction()
+                _prediction = {
+                    line = 1,
+                    column = 1,
+                    file = vim.api.nvim_buf_get_name(0),
+                }
                 local json_match = completion_result:match('%[%d+, %d+, "[%w/\\.-_]+"%]')
                 if json_match ~= nil then
                     local prediction_json = vim.json.decode(json_match)
