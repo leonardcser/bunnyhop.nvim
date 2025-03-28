@@ -158,7 +158,8 @@ local function init()
             if current_win_config.relative ~= "" then
                 return
             end
-            _bhop_adapter.complete(bhop_context.create_prompt(), M.opts, function(completion_result)
+            local prompt = bhop_context.create_prompt()
+            _bhop_adapter.complete(prompt, M.opts, function(completion_result)
                 if vim.api.nvim_get_mode().mode ~= "n" then return end
 
                 -- Prasing completion result to prediction
@@ -203,6 +204,7 @@ local function init()
                 latest_edit["prediction_line"] = _prediction.line
                 latest_edit["prediction_file"] = _prediction.file
                 latest_edit["model"] = M.opts.model
+                latest_edit["prompt"] = prompt
                 bhop_jsona.append(get_editlist_file_path(_prediction.file), {latest_edit})
                 -- TODO: This if statement is a patch, find the root cause and fix it.
                 if _editlists[_prediction.file] == nil then
