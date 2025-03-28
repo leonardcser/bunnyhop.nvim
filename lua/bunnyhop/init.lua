@@ -1,5 +1,4 @@
 local bhop_log = require("bunnyhop.log")
-local bhop_prediction = require("bunnyhop.prediction")
 local bhop_context = require("bunnyhop.context")
 local bhop_jsona = require("bunnyhop.jsona")
 
@@ -20,7 +19,7 @@ local _preview_win_id = _DEFAULT_PREVIOUS_WIN_ID
 ---@type number
 local _action_counter = _DEFAULT_ACTION_COUNTER
 ---@type bhop.Prediction
-local _prediction = bhop_prediction.create_default_prediction()
+local _prediction = nil
 ---@type string
 local _edit_dir_path = vim.fn.stdpath("data") .. "/bunnyhop/edit_predictions/"
 
@@ -115,6 +114,30 @@ local function latest_n(list, n)
     return list_latest_n
 end
 
+---@return bhop.Prediction
+function M.create_default_prediction()
+    return {
+        line = 1,
+        column = 1,
+        file = vim.api.nvim_buf_get_name(0),
+    }
+end
+
+---Clips number "num" to be within the range of "min" and "max".
+---@param num number
+---@param min number
+---@param max number
+---@return number
+local function clip_number(num, min, max)
+    -- TODO: Figure out why min > max is there and if it can be removed
+    if min > max or num < min then
+        return min
+    elseif num > max then
+        return max
+    end
+    return num
+end
+
 ---Empty stub for hop function
 function M.hop() end
 
@@ -122,7 +145,16 @@ function M.hop() end
 local function init()
     -- Functions initialization
     function M.hop()
-        bhop_prediction.hop(_prediction)
+        if _prediction.line == -1 or _prediction.column == -1 then
+            return
+        end
+
+        -- Adds current position to the jumplist so you can <C-o> back to it if you don't like where you hopped.
+        vim.cmd("normal! m'")
+        local buf_num = vim.fn.bufnr(_prediction.file, true)
+        vim.fn.bufload(buf_num)
+        vim.api.nvim_set_current_buf(buf_num)
+        vim.api.nvim_win_set_cursor(0, { _prediction.line, _prediction.column - 1 })
         close_preview_win()
     end
 
@@ -135,31 +167,53 @@ local function init()
             if current_win_config.relative ~= "" then
                 return
             end
-            bhop_prediction.predict(_bhop_adapter, M.opts, function(prediction)
+            _bhop_adapter.complete(bhop_context.create_prompt(), M.opts, function(completion_result)
                 if vim.api.nvim_get_mode().mode ~= "n" then return end
 
+                -- Prasing completion result to prediction
+                _prediction = M.create_default_prediction()
+                local json_match = completion_result:match('%[%d+, %d+, "[%w/\\.-_]+"%]')
+                if json_match ~= nil then
+                    local prediction_json = vim.json.decode(json_match)
+                    if vim.fn.filereadable(prediction_json[3]) == 1 then
+                        _prediction.file = prediction_json[3]
+                    end
+                    local pred_buf_num = vim.fn.bufadd(_prediction.file)
+                    vim.fn.bufload(pred_buf_num)
+
+                    if type(prediction_json[1]) == "number" then
+                        _prediction.line =
+                            clip_number(prediction_json[1], 1, vim.api.nvim_buf_line_count(pred_buf_num))
+                    end
+
+                    if type(prediction_json[2]) == "number" then
+                        local pred_line_content = vim.api.nvim_buf_get_lines(pred_buf_num, _prediction.line - 1, _prediction.line, true)[1]
+                        local white_space_ammount = #pred_line_content - #pred_line_content:gsub("^%s+", "")
+                        _prediction.column = clip_number(prediction_json[2], white_space_ammount + 1, #pred_line_content - 1)
+                    end
+                end
+
+                -- Opening preview window
                 if _preview_win_id ~= _DEFAULT_PREVIOUS_WIN_ID then
                     close_preview_win()
                 end
-                _prediction.line = prediction.line
-                _prediction.column = prediction.column
-                _prediction.file = prediction.file
-                _preview_win_id = open_preview_win(prediction, M.opts.max_prev_width)
+                _preview_win_id = open_preview_win(_prediction, M.opts.max_prev_width)
 
+                -- Collecting data
                 if M.opts.collect_data == false then return end
                 local latest_edit = bhop_context.build_editlist(1)[1]
                 if latest_edit == nil then
                     return
                 end
-                latest_edit["prediction_line"] = prediction.line
-                latest_edit["prediction_file"] = prediction.file
+                latest_edit["prediction_line"] = _prediction.line
+                latest_edit["prediction_file"] = _prediction.file
                 latest_edit["model"] = M.opts.model
-                bhop_jsona.append(get_editlist_file_path(prediction.file), {latest_edit})
+                bhop_jsona.append(get_editlist_file_path(_prediction.file), {latest_edit})
                 -- TODO: This if statement is a patch, find the root cause and fix it.
-                if _editlists[prediction.file] == nil then
+                if _editlists[_prediction.file] == nil then
                     return
                 end
-                table.insert(_editlists[prediction.file], latest_edit)
+                table.insert(_editlists[_prediction.file], latest_edit)
             end)
         end,
     })
