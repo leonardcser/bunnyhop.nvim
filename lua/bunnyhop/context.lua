@@ -2,76 +2,193 @@ local bhop_log = require("bunnyhop.log")
 
 local M = {}
 
+---Validates the undo tree state for the current buffer
+---@return boolean
+local function validate_undo_tree()
+    local ut = vim.fn.undotree()
+    if not ut or not ut.entries then
+        return false
+    end
+    
+    -- Check if current sequence is valid
+    if not ut.seq_cur or ut.seq_cur < 0 then
+        return false
+    end
+    
+    -- Check if entries are properly structured
+    for i, entry in ipairs(ut.entries) do
+        if not entry or not entry.seq or entry.seq < 0 then
+            bhop_log.notify(
+                "Invalid undo entry at index " .. i .. " (seq: " .. tostring(entry and entry.seq or "nil") .. ")",
+                vim.log.levels.DEBUG
+            )
+            return false
+        end
+    end
+    
+    return true
+end
+
 ---Builds editlist of the current buffer
 ---@param n_latest? number n latest undootree entires to build the editlist from.
 ---@return bhop.UndoEntry[]
 function M.build_editlist(n_latest)
     local cursor = vim.api.nvim_win_get_cursor(0)
+    
+    -- Validate undo tree state first
+    if not validate_undo_tree() then
+        bhop_log.notify(
+            "Invalid or corrupted undo tree for buffer " .. vim.api.nvim_buf_get_name(0),
+            vim.log.levels.DEBUG
+        )
+        return {}
+    end
+    
     local ut = vim.fn.undotree()
+    
+    -- Double-check after validation
+    if not ut or not ut.entries or #ut.entries == 0 then
+        bhop_log.notify(
+            "No undo history available for buffer " .. vim.api.nvim_buf_get_name(0),
+            vim.log.levels.DEBUG
+        )
+        return {}
+    end
 
+    -- Save current state for recovery
+    local original_seq = ut.seq_cur
+    local original_changedtick = vim.api.nvim_buf_get_changedtick(0)
+    
     local editlist = {}
-    -- create diffs for each entry in our undotree
     local stop = 1
     if n_latest ~= nil then
-        stop = #ut.entries - (n_latest - 1)
+        stop = math.max(1, #ut.entries - (n_latest - 1))
     end
+    
+    -- Process undo entries with better error handling
     for i = #ut.entries, stop, -1 do
-        -- grab the buffer as it is after this iteration's undo state
-        local success = pcall(function()
-            vim.cmd("silent undo " .. ut.entries[i].seq)
-        end)
-        if not success then
+        local entry = ut.entries[i]
+        
+        -- Validate entry structure
+        if not entry or not entry.seq then
             bhop_log.notify(
-                "Encountered a bad state in nvim's native undolist for buffer "
-                    .. vim.api.nvim_buf_get_name(0),
+                "Invalid undo entry at index " .. i .. " for buffer " .. vim.api.nvim_buf_get_name(0),
                 vim.log.levels.DEBUG
             )
+            goto continue
+        end
+        
+        -- Try to navigate to this undo state
+        local success_after = pcall(function()
+            vim.cmd("silent undo " .. entry.seq)
+        end)
+        
+        if not success_after then
+            bhop_log.notify(
+                "Failed to navigate to undo state " .. entry.seq .. " for buffer " .. vim.api.nvim_buf_get_name(0),
+                vim.log.levels.DEBUG
+            )
+            -- Try to recover to original state before breaking
+            pcall(function()
+                vim.cmd("silent undo " .. original_seq)
+            end)
             break
         end
+        
+        -- Verify we're actually at the expected state
+        local current_seq = vim.fn.undotree().seq_cur
+        if current_seq ~= entry.seq then
+            bhop_log.notify(
+                "Undo state mismatch: expected " .. entry.seq .. ", got " .. current_seq,
+                vim.log.levels.DEBUG
+            )
+            goto continue
+        end
+        
         local buffer_after_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) or {}
         local buffer_after = table.concat(buffer_after_lines, "\n")
 
-        -- grab the buffer as it is after this undo state's parent
-        success = pcall(function()
+        -- Navigate to parent state
+        local success_before = pcall(function()
             vim.cmd("silent undo")
         end)
-        if not success then
+        
+        if not success_before then
             bhop_log.notify(
-                "Encountered a bad state in nvim's native undolist for buffer "
-                    .. vim.api.nvim_buf_get_name(0),
+                "Failed to navigate to parent undo state for " .. entry.seq,
                 vim.log.levels.DEBUG
             )
+            -- Try to recover to original state before breaking
+            pcall(function()
+                vim.cmd("silent undo " .. original_seq)
+            end)
             break
         end
+        
         local buffer_before_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false) or {}
         local buffer_before = table.concat(buffer_before_lines, "\n")
 
-        local filename = vim.fn.expand("%")
-        local header = filename .. "\n--- " .. filename .. "\n+++ " .. filename .. "\n"
-        ---@type string
-        ---@diagnostic disable-next-line: assign-type-mismatch
-        local diff = vim.diff(buffer_before, buffer_after)
-        local line_match = diff:match("@@ %-%d+")
-        ---@type number?
-        local line = 1
-        if line_match ~= nil then
-            line = tonumber(line_match:sub(5))
-        end
+        -- Generate diff only if we have valid content
+        if buffer_before ~= buffer_after then
+            local filename = vim.fn.expand("%")
+            local header = filename .. "\n--- " .. filename .. "\n+++ " .. filename .. "\n"
+            local diff = vim.diff(buffer_before, buffer_after)
+            
+            if diff then
+                local line_match = diff:match("@@ %-%d+")
+                local line = 1
+                if line_match ~= nil then
+                    line = tonumber(line_match:sub(5)) or 1
+                end
 
-        table.insert(editlist, {
-            seq = ut.entries[i].seq, -- state number
-            time = ut.entries[i].time, -- state time
-            diff = header .. diff, -- the diff of what was edited
-            file = vim.api.nvim_buf_get_name(0), -- edited file
-            line = line, -- starting edited line number
-            prediction_line = -1,
-            model = "",
-        })
+                table.insert(editlist, {
+                    seq = entry.seq,
+                    time = entry.time,
+                    diff = header .. diff,
+                    file = vim.api.nvim_buf_get_name(0),
+                    line = line,
+                    prediction_line = -1,
+                    model = "",
+                })
+            end
+        end
+        
+        ::continue::
     end
 
-    -- BUG: `gi` (last insert location) is being killed by our method, we should save that as well
-    vim.cmd("silent undo " .. ut.seq_cur)
-    vim.api.nvim_win_set_cursor(0, cursor)
+    -- Restore original state with better error handling
+    local restore_success = pcall(function()
+        vim.cmd("silent undo " .. original_seq)
+    end)
+    
+    if not restore_success then
+        bhop_log.notify(
+            "Failed to restore original undo state " .. original_seq .. " for buffer " .. vim.api.nvim_buf_get_name(0),
+            vim.log.levels.WARN
+        )
+        
+        -- Try alternative restoration methods
+        local recovery_attempts = {
+            function() vim.cmd("silent earlier 9999f") end, -- Go to oldest state
+            function() vim.cmd("silent later 9999f") end,   -- Go to newest state
+            function() vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.api.nvim_buf_get_lines(0, 0, -1, false)) end -- Force buffer refresh
+        }
+        
+        for _, recovery_fn in ipairs(recovery_attempts) do
+            if pcall(recovery_fn) then
+                bhop_log.notify(
+                    "Successfully recovered buffer state using alternative method",
+                    vim.log.levels.DEBUG
+                )
+                break
+            end
+        end
+    end
+    
+    -- Restore cursor position
+    pcall(function()
+        vim.api.nvim_win_set_cursor(0, cursor)
+    end)
 
     return editlist
 end
@@ -119,15 +236,33 @@ local function get_last_modified_file_diff()
     
     -- Fallback: try to get diff from buffer's undo history
     local current_buf = vim.api.nvim_get_current_buf()
-    vim.api.nvim_set_current_buf(last_modified.buf)
     local success, result = pcall(function()
+        -- Safely switch to the target buffer
+        if not vim.api.nvim_buf_is_valid(last_modified.buf) then
+            return nil
+        end
+        
+        vim.api.nvim_set_current_buf(last_modified.buf)
+        
+        -- Check if buffer has undo history before trying to build editlist
+        local ut = vim.fn.undotree()
+        if not ut or not ut.entries or #ut.entries == 0 then
+            return nil
+        end
+        
         local editlist = M.build_editlist(1)
-        if #editlist > 0 then
+        if #editlist > 0 and editlist[1].diff then
             return editlist[1].diff
         end
         return nil
     end)
-    vim.api.nvim_set_current_buf(current_buf)
+    
+    -- Always try to restore the original buffer, even if there was an error
+    pcall(function()
+        if vim.api.nvim_buf_is_valid(current_buf) then
+            vim.api.nvim_set_current_buf(current_buf)
+        end
+    end)
     
     if success and result then
         return last_modified.name, result

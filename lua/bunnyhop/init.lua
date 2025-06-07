@@ -160,14 +160,19 @@ local function init()
             if current_win_config.relative ~= "" then
                 return
             end
+            
+            -- Skip read-only buffers
+            if not vim.api.nvim_buf_get_option(0, 'modifiable') or vim.api.nvim_buf_get_option(0, 'readonly') then
+                return
+            end
             local prompt = bhop_context.create_prompt()
             _bhop_adapter.complete(prompt, M.opts, function(completion_result)
                 if vim.api.nvim_get_mode().mode ~= "n" then return end
 
                 -- Prasing completion result to prediction
                 _prediction = {
-                    line = 1,
-                    column = 1,
+                    line = -1,
+                    column = -1,
                     file = vim.api.nvim_buf_get_name(0),
                 }
                 local json_match = completion_result:match('%[%d+, %d+%]')
@@ -192,11 +197,18 @@ local function init()
                 if _preview_win_id ~= _DEFAULT_PREVIOUS_WIN_ID then
                     close_preview_win()
                 end
-                _preview_win_id = open_preview_win(_prediction, M.opts.max_prev_width)
+                -- Only open preview window if we have a valid prediction
+                if _prediction.line ~= -1 and _prediction.column ~= -1 then
+                    _preview_win_id = open_preview_win(_prediction, M.opts.max_prev_width)
+                end
 
                 -- Collecting data
                 if M.opts.collect_data == false then return end
-                local latest_edit = bhop_context.build_editlist(1)[1]
+                local latest_editlist = bhop_context.build_editlist(1)
+                if #latest_editlist == 0 then
+                    return
+                end
+                local latest_edit = latest_editlist[1]
                 if latest_edit == nil then
                     return
                 end
@@ -250,6 +262,11 @@ local function init()
             if valid_file_name == nil then
                 return
             end
+            
+            -- Skip read-only buffers for data collection
+            if not vim.api.nvim_buf_get_option(0, 'modifiable') or vim.api.nvim_buf_get_option(0, 'readonly') then
+                return
+            end
 
             vim.fn.mkdir(_edit_dir_path, "p")
             local edit_file_path = get_editlist_file_path(buffer_name)
@@ -260,8 +277,13 @@ local function init()
                 return
             end
             local editlist = bhop_context.build_editlist()
-            bhop_jsona.append(edit_file_path, editlist)
-            _editlists[buffer_name] = latest_n(editlist, 40)
+            if #editlist > 0 then
+                bhop_jsona.append(edit_file_path, editlist)
+                _editlists[buffer_name] = latest_n(editlist, 40)
+            else
+                -- Initialize with empty list if no undo history
+                _editlists[buffer_name] = {}
+            end
         end
     })
 end
