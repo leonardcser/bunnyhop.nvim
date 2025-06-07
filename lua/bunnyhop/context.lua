@@ -201,9 +201,15 @@ function M.create_prompt()
         .. "2. Scan the file for similar patterns that weren't changed yet\n"
         .. "3. Consider changes in other recently modified files for related patterns\n"
         .. "4. Predict the cursor will go to the next logical place to make the same change\n\n"
-        .. "RESPONSE FORMAT: [line, column]\n"
+        .. "RESPONSE FORMAT - MANDATORY:\n"
+        .. "You MUST respond with ONLY the cursor position in this exact format: [line, column]\n"
         .. "- Line numbers start at 1\n"
-        .. "- Column numbers start at 1 and refer to the position within the actual text content\n\n"
+        .. "- Column numbers start at 1 and refer to the position within the actual text content\n"
+        .. "- Do NOT include any explanation or reasoning\n"
+        .. "- Do NOT include any other text\n\n"
+        .. "EXAMPLE:\n"
+        .. "If you predict the cursor should go to line 42, column 15, respond with exactly:\n"
+        .. "[42, 15]\n\n"
         .. last_modified_context
         .. recent_edits
         .. "# File Context\n"
