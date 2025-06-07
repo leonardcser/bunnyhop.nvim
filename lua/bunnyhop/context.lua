@@ -80,37 +80,6 @@ end
 ---Creates prompt
 ---@return string
 function M.create_prompt()
-    -- Dict keys to column name convertor
-    -- index (index of the table, 1 to n)
-    -- lnum -> line
-    -- bufnr -> buffer_name
-    -- col -> column
-    local jumplist = vim.fn.getjumplist()[1]
-    local visited_files = {}
-
-    for _, jump_row in pairs(jumplist) do
-        local buf_num = jump_row["bufnr"]
-        if
-            vim.fn.bufexists(buf_num) == 0
-            or vim.api.nvim_buf_is_valid(buf_num) == false
-        then
-            goto continue
-        end
-        local buf_name = vim.api.nvim_buf_get_name(buf_num)
-        if
-            #buf_name == 0
-            or buf_name:match(".") == nil
-            or buf_name:match(".git") ~= nil
-            or buf_name:match(vim.fn.getcwd()) == nil
-        then
-            goto continue
-        end
-        if visited_files[buf_num] == nil then
-            visited_files[buf_num] = buf_name
-        end
-        ::continue::
-    end
-
     -- Get recent edit history with diffs
     local editlist = M.build_editlist(2) -- Get last 2 edits
     local recent_edits = ""
@@ -125,62 +94,62 @@ function M.create_prompt()
         end
     end
 
-    local CHANGELIST_COLUMNS = { "index", "line", "column" }
-    local CHANGELIST_MAX_SIZE = 15 -- Reduced to make room for diffs
     local context = ""
-    for buf_num, buf_name in pairs(visited_files) do
-        local file_content = ""
-        local file = io.open(buf_name, "r")
-        if file == nil then
-            bhop_log.notify("Wasn't able to open " .. buf_name, vim.log.levels.DEBUG)
-        else
-            file_content = file:read("*a")
-            file:close()
-            if file_content == nil then
-                file_content = ""
-            end
+    local current_buf = vim.api.nvim_get_current_buf()
+    local buf_name = vim.api.nvim_buf_get_name(current_buf)
+    
+    -- Only process the current buffer
+    local file_lines = vim.api.nvim_buf_get_lines(current_buf, 0, -1, false) or {}
+    
+    -- Add line numbers and column indicators to file content
+    local numbered_content = ""
+    
+    -- Create column number indicator at the top (every 5th column marked)
+    if #file_lines > 0 then
+        local max_line_length = 0
+        for _, line in ipairs(file_lines) do
+            max_line_length = math.max(max_line_length, #line)
         end
-
-        local changelist_csv = ""
-        local changelist = vim.fn.getchangelist(buf_num)[1]
-        local changelist_start = vim.fn.max { 1, #changelist - CHANGELIST_MAX_SIZE }
-        changelist = vim.fn.slice(changelist, changelist_start, #changelist)
-        if #changelist == 0 then
-            goto continue
+        
+        -- Create column indicator aligned with actual text content
+        local col_indicator = "     " -- 5 spaces to align with line number prefix
+        for col = 1, max_line_length, 5 do
+            col_indicator = col_indicator .. string.format("%-5s", col)
         end
-        for indx, change_row in pairs(changelist) do
-            changelist_csv = changelist_csv
-                .. indx
-                .. ","
-                .. change_row["lnum"]
-                .. ","
-                .. change_row["col"]
-                .. "\n"
-        end
-        context = context
-            .. buf_name
-            .. "\n"
-            .. "## Current Buffer Content\n"
-            .. file_content
-            .. "\n"
-            .. "## Cursor Position History\n"
-            .. table.concat(CHANGELIST_COLUMNS, ",")
-            .. "\n"
-            .. changelist_csv
-            .. "\n"
-        ::continue::
+        numbered_content = numbered_content .. col_indicator .. "\n"
+    end
+    
+    for i, line in ipairs(file_lines) do
+        numbered_content = numbered_content .. string.format("%4d %s\n", i, line)
     end
 
-    local prompt = "Predict the next cursor position based on editing patterns and context.\n"
-        .. "ANALYZE:\n"
-        .. "1. Recent edits show what changes were made\n"
-        .. "2. Cursor history shows movement patterns\n"
-        .. "3. Current content shows the file state\n"
-        .. "4. Look for patterns like: variable renaming, function calls, similar code structures\n\n"
-        .. "OUTPUT FORMAT: [line, column, \"buffer_name\"]\n"
-        .. "- line: predicted line number (1-indexed)\n"
-        .. "- column: predicted column number (0-indexed)\n"
-        .. "- buffer_name: just the filename (e.g., \"test.js\" not full path)\n\n"
+    -- Get current cursor position
+    local cursor = vim.api.nvim_win_get_cursor(0)
+    local current_cursor_info = string.format("## Current Cursor Position\nLine: %d, Column: %d\n\n", cursor[1], cursor[2])
+
+    context = buf_name .. " (LIVE - includes unsaved changes)"
+        .. "\n"
+        .. current_cursor_info
+        .. "## File Content (with line numbers)\n"
+        .. numbered_content
+
+    local prompt = "You are predicting where a programmer will move their cursor next.\n\n"
+        .. "KEY TASK: Look for incomplete edits that need finishing.\n\n"
+        .. "COMMON PATTERNS:\n"
+        .. "- Variable renaming: if renamed in one location, likely needs renaming elsewhere\n"
+        .. "- Function definitions: after defining, often used/called elsewhere\n"
+        .. "- Similar structures: patterns often repeat (imports, assignments, etc.)\n"
+        .. "- Error fixing: inconsistent variable names, missing semicolons, etc.\n\n"
+        .. "- Linting errors: unused variables, unused imports, etc.\n\n"
+        .. "HOW TO PREDICT:\n"
+        .. "1. Look at recent edits - what was changed?\n"
+        .. "2. Scan the file for similar patterns that weren't changed yet\n"
+        .. "3. Predict the cursor will go to the next logical place to make the same change\n\n"
+        .. "RESPONSE FORMAT: [line, column, \"filename\"]\n"
+        .. "- Line numbers start at 1\n"
+        .. "- Column numbers start at 1 and refer to the position within the actual text content\n"
+        .. "- Column indicators above show text positions (ignore the line number prefix)\n"
+        .. "- Use just the filename, not full path\n\n"
         .. recent_edits
         .. "# File Context\n"
         .. context
