@@ -1,4 +1,5 @@
 local bhop_log = require("bunnyhop.log")
+local completion_logger = require("bunnyhop.completion_logger")
 local M = {}
 
 ---Processes the given api_key for the Ollama provider.
@@ -64,33 +65,7 @@ function M.get_models(config, callback) --luacheck: no unused args
     end)
 end
 
----Logs completion data to log.txt file
----@param prompt string The input prompt
----@param completion string The completion result
----@param model string The model used
----@param success boolean Whether the completion was successful
-local function log_completion(prompt, completion, model, success)
-    local log_file = "log.txt"
-    local timestamp = os.date("%Y-%m-%d %H:%M:%S")
-    
-    -- Format the log entry
-    local log_entry = string.format(
-        "[%s] Model: %s | Success: %s\nPrompt: %s\nResult: %s\n%s\n",
-        timestamp,
-        model,
-        tostring(success),
-        prompt,
-        completion,
-        string.rep("-", 80)
-    )
-    
-    -- Append to log file
-    local file = io.open(log_file, "a")
-    if file then
-        file:write(log_entry)
-        file:close()
-    end
-end
+
 
 ---Completes the given prompt using the local Ollama instance.
 ---@param prompt string Input prompt.
@@ -123,7 +98,7 @@ function M.complete(prompt, config, callback)
                     "Ollama Adapter: Request failed. " .. result.stderr,
                     vim.log.levels.ERROR
                 )
-                log_completion(prompt, "", config.model or "unknown", false)
+                completion_logger.log_completion(prompt, "", config.model or "unknown", "ollama", false)
                 callback("")
                 return
             end
@@ -134,7 +109,7 @@ function M.complete(prompt, config, callback)
                     "Ollama Adapter: Invalid response from Ollama API",
                     vim.log.levels.ERROR
                 )
-                log_completion(prompt, "", config.model or "unknown", false)
+                completion_logger.log_completion(prompt, "", config.model or "unknown", "ollama", false)
                 callback("")
                 return
             end
@@ -144,7 +119,7 @@ function M.complete(prompt, config, callback)
                     "Ollama Error: '" .. response.error .. "'",
                     vim.log.levels.ERROR
                 )
-                log_completion(prompt, response.error, config.model or "unknown", false)
+                completion_logger.log_completion(prompt, response.error, config.model or "unknown", "ollama", false)
                 callback("")
                 return
             end
@@ -154,13 +129,13 @@ function M.complete(prompt, config, callback)
                     "Ollama Adapter: Empty response from model",
                     vim.log.levels.ERROR
                 )
-                log_completion(prompt, "", config.model or "unknown", false)
+                completion_logger.log_completion(prompt, "", config.model or "unknown", "ollama", false)
                 callback("")
                 return
             end
             
             -- Log successful completion
-            log_completion(prompt, response.response, config.model or "unknown", true)
+            completion_logger.log_completion(prompt, response.response, config.model or "unknown", "ollama", true)
             callback(response.response)
         end)
     end)

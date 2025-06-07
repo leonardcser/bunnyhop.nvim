@@ -2,7 +2,7 @@
 
 ---Configuration options for the bunnyhop plugin.
 ---@class bhop.Opts
----@field adapter "hugging_face" | "copilot" | "ollama"
+---@field adapter "hugging_face" | "copilot" | "ollama" | "openrouter"
 -- Model to use for chosen provider.
 -- To know what models are available for chosen adapter,
 -- run `:lua require("bunnyhop.adapters.{adapter}").get_models()`
@@ -11,6 +11,8 @@
 ---@field api_key string
 -- Ollama URL (only used with ollama adapter)
 ---@field ollama_url string
+-- OpenRouter URL (only used with openrouter adapter)
+---@field openrouter_url string
 -- Max width the preview window will be.
 -- Here for if you want to make the preview window bigger/smaller.
 ---@field max_prev_width number
@@ -39,5 +41,4 @@
 ---@field file string edited file
 ---@field line number starting edited line number of the diff
 ---@field prediction_line number predicted line
----@field prediction_file string predicted file
 ---@field model string model used to predict the

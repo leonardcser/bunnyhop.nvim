@@ -31,6 +31,7 @@ M.opts = {
     model = "gpt-4o-2024-08-06",
     api_key = "",
     ollama_url = "http://localhost:11434",
+    openrouter_url = "https://openrouter.ai/api/v1",
     max_prev_width = 20,
     collect_data = false,
 }
@@ -169,12 +170,9 @@ local function init()
                     column = 1,
                     file = vim.api.nvim_buf_get_name(0),
                 }
-                local json_match = completion_result:match('%[%d+, %d+, "[%w/\\.-_]+"%]')
+                local json_match = completion_result:match('%[%d+, %d+%]')
                 if json_match ~= nil then
                     local prediction_json = vim.json.decode(json_match)
-                    if vim.fn.filereadable(prediction_json[3]) == 1 then
-                        _prediction.file = prediction_json[3]
-                    end
                     local pred_buf_num = vim.fn.bufadd(_prediction.file)
                     vim.fn.bufload(pred_buf_num)
 
@@ -203,7 +201,6 @@ local function init()
                     return
                 end
                 latest_edit["prediction_line"] = _prediction.line
-                latest_edit["prediction_file"] = _prediction.file
                 latest_edit["model"] = M.opts.model
                 latest_edit["prompt"] = prompt
                 bhop_jsona.append(get_editlist_file_path(_prediction.file), {latest_edit})

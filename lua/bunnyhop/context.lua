@@ -65,7 +65,6 @@ function M.build_editlist(n_latest)
             file = vim.api.nvim_buf_get_name(0), -- edited file
             line = line, -- starting edited line number
             prediction_line = -1,
-            prediction_file = "",
             model = "",
         })
     end
@@ -77,11 +76,71 @@ function M.build_editlist(n_latest)
     return editlist
 end
 
+---Gets the most recently modified file (excluding current buffer)
+---@return string?, string?
+local function get_last_modified_file_diff()
+    local current_buf_name = vim.api.nvim_buf_get_name(0)
+    local current_dir = vim.fn.getcwd()
+    
+    -- Get all buffers and their modification times
+    local buffers_info = {}
+    for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+        if vim.api.nvim_buf_is_loaded(buf) and vim.api.nvim_buf_get_option(buf, 'buflisted') then
+            local buf_name = vim.api.nvim_buf_get_name(buf)
+            if buf_name ~= "" and buf_name ~= current_buf_name and buf_name:find(current_dir, 1, true) == 1 then
+                local stat = vim.loop.fs_stat(buf_name)
+                if stat then
+                    table.insert(buffers_info, {
+                        name = buf_name,
+                        mtime = stat.mtime.sec,
+                        buf = buf
+                    })
+                end
+            end
+        end
+    end
+    
+    -- Sort by modification time (most recent first)
+    table.sort(buffers_info, function(a, b) return a.mtime > b.mtime end)
+    
+    if #buffers_info == 0 then
+        return nil, nil
+    end
+    
+    local last_modified = buffers_info[1]
+    
+    -- Try to get git diff for the file
+    local git_diff_cmd = string.format("git diff HEAD -- %s", vim.fn.shellescape(last_modified.name))
+    local git_diff = vim.fn.system(git_diff_cmd)
+    
+    if vim.v.shell_error == 0 and git_diff ~= "" then
+        return last_modified.name, git_diff
+    end
+    
+    -- Fallback: try to get diff from buffer's undo history
+    local current_buf = vim.api.nvim_get_current_buf()
+    vim.api.nvim_set_current_buf(last_modified.buf)
+    local success, result = pcall(function()
+        local editlist = M.build_editlist(1)
+        if #editlist > 0 then
+            return editlist[1].diff
+        end
+        return nil
+    end)
+    vim.api.nvim_set_current_buf(current_buf)
+    
+    if success and result then
+        return last_modified.name, result
+    end
+    
+    return last_modified.name, nil
+end
+
 ---Creates prompt
 ---@return string
 function M.create_prompt()
     -- Get recent edit history with diffs
-    local editlist = M.build_editlist(2) -- Get last 2 edits
+    local editlist = M.build_editlist(4)
     local recent_edits = ""
     if #editlist > 0 then
         recent_edits = "## Recent Edit History (most recent first)\n"
@@ -94,6 +153,17 @@ function M.create_prompt()
         end
     end
 
+    -- Get last modified file diff
+    local last_modified_file, last_modified_diff = get_last_modified_file_diff()
+    local last_modified_context = ""
+    if last_modified_file and last_modified_diff then
+        local relative_path = vim.fn.fnamemodify(last_modified_file, ":~:.")
+        last_modified_context = "## Last Modified File: " .. relative_path .. "\n"
+            .. "```diff\n"
+            .. last_modified_diff
+            .. "\n```\n\n"
+    end
+
     local context = ""
     local current_buf = vim.api.nvim_get_current_buf()
     local buf_name = vim.api.nvim_buf_get_name(current_buf)
@@ -101,26 +171,11 @@ function M.create_prompt()
     -- Only process the current buffer
     local file_lines = vim.api.nvim_buf_get_lines(current_buf, 0, -1, false) or {}
     
-    -- Add line numbers and column indicators to file content
+    -- Add line numbers to file content
     local numbered_content = ""
     
-    -- Create column number indicator at the top (every 5th column marked)
-    if #file_lines > 0 then
-        local max_line_length = 0
-        for _, line in ipairs(file_lines) do
-            max_line_length = math.max(max_line_length, #line)
-        end
-        
-        -- Create column indicator aligned with actual text content
-        local col_indicator = "     " -- 5 spaces to align with line number prefix
-        for col = 1, max_line_length, 5 do
-            col_indicator = col_indicator .. string.format("%-5s", col)
-        end
-        numbered_content = numbered_content .. col_indicator .. "\n"
-    end
-    
     for i, line in ipairs(file_lines) do
-        numbered_content = numbered_content .. string.format("%4d %s\n", i, line)
+        numbered_content = numbered_content .. string.format("%4d: %s\n", i, line)
     end
 
     -- Get current cursor position
@@ -144,12 +199,12 @@ function M.create_prompt()
         .. "HOW TO PREDICT:\n"
         .. "1. Look at recent edits - what was changed?\n"
         .. "2. Scan the file for similar patterns that weren't changed yet\n"
-        .. "3. Predict the cursor will go to the next logical place to make the same change\n\n"
-        .. "RESPONSE FORMAT: [line, column, \"filename\"]\n"
+        .. "3. Consider changes in other recently modified files for related patterns\n"
+        .. "4. Predict the cursor will go to the next logical place to make the same change\n\n"
+        .. "RESPONSE FORMAT: [line, column]\n"
         .. "- Line numbers start at 1\n"
-        .. "- Column numbers start at 1 and refer to the position within the actual text content\n"
-        .. "- Column indicators above show text positions (ignore the line number prefix)\n"
-        .. "- Use just the filename, not full path\n\n"
+        .. "- Column numbers start at 1 and refer to the position within the actual text content\n\n"
+        .. last_modified_context
         .. recent_edits
         .. "# File Context\n"
         .. context

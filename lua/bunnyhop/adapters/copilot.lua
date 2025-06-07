@@ -1,4 +1,5 @@
 local bhop_log = require("bunnyhop.log")
+local completion_logger = require("bunnyhop.completion_logger")
 local M = {}
 
 ---@type string?
@@ -184,6 +185,7 @@ function M.complete(prompt, config, callback)
             vim.schedule(function()
                 if cmd_result.code ~= 0 then
                     bhop_log.notify(cmd_result.stderr, vim.log.levels.ERROR)
+                    completion_logger.log_completion(prompt, "", config.model or "unknown", "copilot", false)
                     callback("")
                     return
                 end
@@ -193,9 +195,12 @@ function M.complete(prompt, config, callback)
                         "Copilot Error: '" .. response.error.message .. "'",
                         vim.log.levels.ERROR
                     )
+                    completion_logger.log_completion(prompt, response.error.message, config.model or "unknown", "copilot", false)
                     callback("")
                     return
                 end
+                -- Log successful completion
+                completion_logger.log_completion(prompt, response.choices[1].message.content, config.model or "unknown", "copilot", true)
                 callback(response.choices[1].message.content)
             end)
         end)

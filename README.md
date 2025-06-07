@@ -22,8 +22,8 @@ Curl and its cli are required as they are used for performing http requests to
 the different LLM providers.
 
 Either Copilot (Recommended), Hugging Face's
-[Serverless](https://huggingface.co/docs/api-inference/en/index), or Ollama for
-local inference.
+[Serverless](https://huggingface.co/docs/api-inference/en/index), OpenRouter, or
+Ollama for local inference.
 
 - **Copilot**: You only need to set it up via
   [copilot.lua](https://github.com/zbirenbaum/copilot.lua) or
@@ -32,6 +32,10 @@ local inference.
   [here](https://huggingface.co/docs/api-inference/en/getting-started). Once you
   have the API key, create an environment variable for the key, eg.
   `export HF_API_KEY=************`.
+- **OpenRouter**: An API key is required. Sign up at
+  [OpenRouter](https://openrouter.ai) to get an API key. Once you have the API
+  key, create an environment variable for the key, eg.
+  `export OPENROUTER_API_KEY=************`.
 - **Ollama**: Install [Ollama](https://ollama.ai) and pull your desired model
   (e.g., `ollama pull llama3.2` or `ollama pull qwen2.5-coder`). Make sure
   Ollama is running (`ollama serve`).
@@ -54,7 +58,7 @@ local inference.
         },
     },
     opts = {
-        -- Available options: "copilot", "huggingface", "ollama"
+        -- Available options: "copilot", "huggingface", "ollama", "openrouter"
         adapter = "copilot",
         -- Model to use for chosen provider.
         -- To know what models are available for chosen adapter,
@@ -67,6 +71,8 @@ local inference.
         api_key = "",
         -- Ollama URL (only used with ollama adapter)
         ollama_url = "http://localhost:11434",
+        -- OpenRouter URL (only used with openrouter adapter)
+        openrouter_url = "https://openrouter.ai/api/v1",
         -- Max width the preview window will be.
         -- Here for if you want to make the preview window bigger/smaller.
         max_prev_width = 20,
@@ -111,6 +117,17 @@ opts = {
     adapter = "huggingface",
     model = "Qwen/Qwen2.5-Coder-32B-Instruct",
     api_key = "HF_API_KEY", -- environment variable name
+},
+```
+
+#### Using OpenRouter
+
+```lua
+opts = {
+    adapter = "openrouter",
+    model = "anthropic/claude-3.5-sonnet", -- or "openai/gpt-4o-2024-08-06", "qwen/qwen-2.5-coder-32b-instruct", etc.
+    api_key = "OPENROUTER_API_KEY", -- environment variable name
+    openrouter_url = "https://openrouter.ai/api/v1", -- default OpenRouter URL
 },
 ```
 
