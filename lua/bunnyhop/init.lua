@@ -30,6 +30,7 @@ M.opts = {
     adapter = "copilot",
     model = "gpt-4o-2024-08-06",
     api_key = "",
+    ollama_url = "http://localhost:11434",
     max_prev_width = 20,
     collect_data = false,
 }

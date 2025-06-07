@@ -11,7 +11,9 @@ M.check = function()
             },
             {
                 ok = bhop.config.api_key:match("^hf_*"),
-                err_msg = "Given API key '" .. bhop.config.api_key .. "' is not a hugging face api key",
+                err_msg = "Given API key '"
+                    .. bhop.config.api_key
+                    .. "' is not a hugging face api key",
             },
         },
     }
@@ -20,7 +22,7 @@ M.check = function()
     for check_category_name, check_category in pairs(setup_checks) do
         local current_ok = true
         local current_err_msg = check_category_name .. " Error: \n"
-        for _, check in pairs(check_category) do
+        for _, check in ipairs(check_category) do
             if check.ok == false then
                 current_ok = false
                 current_err_msg = current_err_msg .. check.err_msg .. "\n"

@@ -111,8 +111,22 @@ function M.create_prompt()
         ::continue::
     end
 
+    -- Get recent edit history with diffs
+    local editlist = M.build_editlist(2) -- Get last 2 edits
+    local recent_edits = ""
+    if #editlist > 0 then
+        recent_edits = "## Recent Edit History (most recent first)\n"
+        for i, edit in ipairs(editlist) do
+            recent_edits = recent_edits
+                .. "### Edit " .. i .. " (line " .. (edit.line or "unknown") .. ")\n"
+                .. "```diff\n"
+                .. edit.diff
+                .. "\n```\n\n"
+        end
+    end
+
     local CHANGELIST_COLUMNS = { "index", "line", "column" }
-    local CHANGELIST_MAX_SIZE = 20
+    local CHANGELIST_MAX_SIZE = 15 -- Reduced to make room for diffs
     local context = ""
     for buf_num, buf_name in pairs(visited_files) do
         local file_content = ""
@@ -146,12 +160,10 @@ function M.create_prompt()
         context = context
             .. buf_name
             .. "\n"
-            .. "## Buffer content"
-            .. "\n"
+            .. "## Current Buffer Content\n"
             .. file_content
             .. "\n"
-            .. "## Change history of buffer "
-            .. "\n"
+            .. "## Cursor Position History\n"
             .. table.concat(CHANGELIST_COLUMNS, ",")
             .. "\n"
             .. changelist_csv
@@ -159,14 +171,18 @@ function M.create_prompt()
         ::continue::
     end
 
-    local prompt = "Predict next cursor position based on the following information.\n"
-        .. "ONLY output the following format:\n"
-        .. '[line, column, "buffer_name"].\n'
-        .. "'line' is the line number the cursor should be on next\n"
-        .. "'column' is the column the cursor should be on next\n"
-        .. "'buffer_name' should be the name of the file the cursor should be on next\n"
-        .. "DO NOT HALLUCINATE!\n" -- for the memes
-        .. "# History of Cursor Jumps\n"
+    local prompt = "Predict the next cursor position based on editing patterns and context.\n"
+        .. "ANALYZE:\n"
+        .. "1. Recent edits show what changes were made\n"
+        .. "2. Cursor history shows movement patterns\n"
+        .. "3. Current content shows the file state\n"
+        .. "4. Look for patterns like: variable renaming, function calls, similar code structures\n\n"
+        .. "OUTPUT FORMAT: [line, column, \"buffer_name\"]\n"
+        .. "- line: predicted line number (1-indexed)\n"
+        .. "- column: predicted column number (0-indexed)\n"
+        .. "- buffer_name: just the filename (e.g., \"test.js\" not full path)\n\n"
+        .. recent_edits
+        .. "# File Context\n"
         .. context
 
     return prompt
